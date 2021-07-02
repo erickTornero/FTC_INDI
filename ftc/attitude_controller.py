@@ -13,9 +13,10 @@ class AttitudeController:
 
         self.k = k0
         self.t = t0
-        self.beta = np.atan(b/l)
+        self.beta = np.arctan(b/l)
+        self.double_rotor = True
 
-    def update(self, euler, h0):
+    def update(self, euler, h0, zdd, ddy, rdot, nu, U0, fail_indexes: list):
         phi = euler[0]
         theta = euler[1]
 
@@ -35,7 +36,9 @@ class AttitudeController:
 
         Gr = np.array([self.t, -self.t, self.t, -self.t]) / self.iz
 
-        h1 = h0[0], h2 = h0[1], h3 = h0[2]
+        h1 = h0[0]
+        h2 = h0[1]
+        h3 = h0[2]
 
         G0 = np.array([
             -self.k/self.mass*np.cos(theta)*np.cos(phi)*np.ones(4), 
@@ -46,4 +49,48 @@ class AttitudeController:
 
         R = block_diag(1, np.array([[np.cos(self.chi), np.sin(self.chi)], [-np.sin(self.chi), np.cos(self.chi)]]), 1)
 
+        ddy0 = np.array([[zdd], [ddy], [rdot], [0]])
 
+        G = np.matmul(R, G0)
+
+        ## if
+        if self.double_rotor:
+            for fail_index in fail_indexes:
+                if fail_index in [0, 2]:
+                    fail_id = [0, 2]
+                else:
+                    fail_id = [1, 3]
+        else:
+            fail_id = 1
+        if self.double_rotor:
+            G[:, fail_id] = np.zeros((4, len(fail_id)))
+            ddy0[2:,:] = np.zeros((2, 1))
+            G[2:, :] = np.zeros_like(G[2:3, :])
+            nu[2:, :] = np.zeros((2, 1)) 
+        else:
+            G[:fail_id] = np.zeros((4, 1))
+            ddy0[3] = 0
+            G[3, :] = np.zeros_like(G[3, :])
+            nu[3] = 0
+        
+        dU = np.matmul(np.linalg.pinv(G), nu - ddy0)
+
+        Y = (nu - ddy0)
+        U = U0 + dU
+        return U, Y
+
+if __name__ == '__main__':
+    ac = AttitudeController(
+        0.01, 0.01, 0.21, 0.3, 0.25, 0.8, 1.65, 0.1, 0.1
+    )
+
+    response = ac.update(
+        np.array([0.1, 0.3, 0.01]),
+        np.array([0.2, 0.8, 0.22]),
+        3.4, 3.3, 2.1, 
+        np.array([0.43, 0.223, 0.01, 0.81]).reshape(4,1),
+        np.array([2, 2, 2, 2]).reshape(4, 1),
+        [1]
+    )
+
+    print(response)

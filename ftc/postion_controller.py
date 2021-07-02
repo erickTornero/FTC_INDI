@@ -77,17 +77,18 @@ class PositionController:
 
         return nu
 
-pc = PositionController(1, 1, 9.81, 0.1, 0.1, 0.1, 0.1, 0.1)
-
-response = pc.update(
-    np.array([0, 0,0.8 ]),
-    np.array([1, 0.1, 8 ]),
-    np.array([0, 0, 1 ]),
-    np.array([-0.5, 0.8, 1.2 ]),
-    np.array([1, 1.5, 0.8 ]),
-    np.array([1, 1, 1 ]),
-)
-
-print(response)
+if __name__ == '__main__':
+    pc = PositionController(1, 1, 9.81, 0.1, 0.1, 0.1, 0.1, 0.1)
+    
+    response = pc.update(
+        np.array([0, 0,0.8 ]),
+        np.array([1, 0.1, 8 ]),
+        np.array([0, 0, 1 ]),
+        np.array([-0.5, 0.8, 1.2 ]),
+        np.array([1, 1.5, 0.8 ]),
+        np.array([1, 1, 1 ]),
+    )
+    
+    print(response)
         
 
