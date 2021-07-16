@@ -1,3 +1,3 @@
 from .filters import LowpassFilter
-from .attitude_controller import AttitudeController
-from .postion_controller  import PositionController
+from .allocation_att_indi import AllocationAttINDI
+from .pseudo_controll_att_indi import PseudoControllAttINDI

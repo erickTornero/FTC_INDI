@@ -2,6 +2,7 @@
     Position Controller based on PID
 """
 import numpy as np
+from math import sin, cos
 
 class PseudoControllAttINDI:
     def __init__(self, parameters): 
@@ -57,21 +58,17 @@ class PseudoControllAttINDI:
             [h3 * p + h1 * r + lambda_[1]]
         ])
 
-        Y = np.matmul(
-            np.array([
-                [np.cos(self.chi), np.sin(self.chi)], 
-                [-np.sin(self.chi), np.cos(self.chi)]
-                ]), Y)
-        dY = np.matmul(
-            np.array([
-                [np.cos(self.chi), np.sin(self.chi)], 
-                [-np.sin(self.chi), np.cos(self.chi)]
-                ]), dY)
+        local_mat = np.array([
+                        [cos(chi), sin(chi)], 
+                        [-sin(chi), cos(chi)]
+                    ])
+        Y = np.matmul(local_mat, Y)
+        dY = np.matmul(local_mat, dY)
 
         nu1 = - self.kdz * (vZ - Vz_ref) - self.kpz * (Z - Z_ref)
         nu2 =  - self.katt_d * dY[0] - self.katt_p * Y[0]
         nu3 =  - self.katt_d * dY[1] - self.katt_p * Y[1]
-        nu4 =  - self.kpr * (r-self.angular_vel_ref[2])
+        nu4 =  - self.kpr * (r-r_ref)
 
         nu = np.array([
             [nu1], [nu2[0]], [nu3[0]], [nu4],

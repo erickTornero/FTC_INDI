@@ -1,7 +1,7 @@
 import time
 import numpy as np
 from ftc.functions import URPositionControl, URYawControl
-from ftc import PositionController, AttitudeController 
+from ftc import PseudoControllAttINDI, AllocationAttINDI 
 from ftc.filters import LowpassFilter
 from math import sin, cos
 

@@ -1,20 +1,61 @@
 import numpy as np
+from math import sin, cos
 from scipy.linalg import block_diag
 
-class AttitudeController:
-    def __init__(self, ix, iy, iz, b, l, chi, mass, k0, t0):
-        self.ix = ix
-        self.iy = iy
-        self.iz = iz
-        self.b = b
-        self.l = l
-        self.chi = chi
-        self.mass = mass
-
-        self.k = k0
-        self.t = t0
-        self.beta = np.arctan(b/l)
+class AllocationAttINDI:
+    def __init__(self, parameters):
+        self.ix = parameters.ix
+        self.iy = parameters.iy
+        self.iz = parameters.iz
+        self.b = parameters.b
+        self.l = parameters.l
+        self.chi = parameters.chi
+        self.mass = parameters.mass
+        self.k = parameters.k0
+        self.t = parameters.t0
+        self.beta = np.arctan(self.b/self.l)
         self.double_rotor = True
+
+    def __call__(self, state, nu, ddY, h0, zdd, U0, rdot):
+        fail_flag = state.fail_id
+        phi = state.att[0]
+        theta = state.att[1]
+        chi = self.chi
+        if state.fail_id == 1 or state.fail_id == 3:
+            chi = np.pi - self.chi
+
+        h1 = h0[0]
+        h2 = h0[1]
+        h3 = h0[2]
+
+        Gp = np.array([
+            self.k * self.b * sin(self.beta), 
+            -self.k * self.b * sin(self.beta), 
+            -self.k * self.b * sin(self.beta), 
+            self.k * self.b * sin(self.beta)
+        ])/ self.ix
+
+        Gq = np.array([
+            self.k * self.b * np.cos(self.beta), 
+            self.k * self.b * np.cos(self.beta), 
+            -self.k * self.b * np.cos(self.beta), 
+            -self.k * self.b * np.cos(self.beta)
+        ]) / self.iy
+
+        Gr = np.array([self.t, -self.t, self.t, -self.t]) / self.iz
+        
+        G0 = np.array([
+            -self.k/self.mass * cos(theta) * cos(phi) * np.ones(4), 
+            -h3 * Gq + h2 * Gr,
+            h3 * Gp - h1 * Gr,
+            Gr
+        ])
+
+        R = block_diag(1, np.array([[cos(chi), sin(chi)], [-sin(chi), cos(chi)]]), 1)
+        ddy0 = np.array([zdd, ddY, rdot, 0])
+        G = np.matmul(R, G0)
+        
+
 
     def update(self, euler, h0, zdd, ddy, rdot, nu, U0, fail_indexes: list):
         phi = euler[0]
