@@ -30,4 +30,4 @@ def URpositionControl(inputs, state, par, errorInt):
     # normalise
     n_des = a_ref/np.linalg.norm(a_ref)
 
-    return n_des
+    return n_des, errorInt

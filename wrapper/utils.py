@@ -284,5 +284,15 @@ class RobotDescription:
                     max_rotor_speed = float(plugin.find('maxRotVelocity').text)
                     return max_rotor_speed
 
+    def get_intertias(self):
+        raise NotImplementedError("")
+
+    def get_mass(self):
+        raise NotImplementedError("")
+
+    
+
+    
+
 
 
