@@ -9,8 +9,9 @@ class INDIController:
     def __init__(self, parameters):
         self.errorInt = np.zeros(3, dtype=np.float32)
         self.parameters = parameters
-        self.pseudo_controll_att = PositionController(parameters)
-        self.allocation_att_indi = AttitudeController(parameters)
+        self.pseudo_controll_att = PseudoAttINDIControl(parameters)
+        self.allocation_att_indi = AllocationAttINDIControl(parameters)
+        self.subsystem = Subsystem(parameters)
 
     def outer_controller(self, state, inputs):
         n_des, self.errorInt = URPositionControl(inputs, state, self.parameters, self.errorInt)
@@ -77,8 +78,17 @@ class Subsystem:
 
 
 class PseudoAttINDIControl:
-    def __init__(self):
+    def __init__(self, parameters):
         pass
 
     def __call__(self, state, n_des, state1, r_sp, inputs):
         # Prepare inputs
+        pass
+
+
+class AllocationAttINDIControl:
+    def __init__(self, parameters):
+        pass
+
+    def __call__(self):
+        pass

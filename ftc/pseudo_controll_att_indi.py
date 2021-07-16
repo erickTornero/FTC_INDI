@@ -3,41 +3,43 @@
 """
 import numpy as np
 
-class PositionController:
-    def __init__(self, mass, chi, gravity, kpz, kdz, katt_p, katt_d, kpr):
-        self.mass = mass
-        self.chi = chi
-        self.gravity = gravity
+class PseudoControllAttINDI:
+    def __init__(self, parameters): 
+        self.mass = parameters.mass
+        self.chi = parameters.chi/57.3
+        self.gravity = parameters.gravity
 
         # gains
-        self.kpz = kpz
-        self.kdz = kdz
-        self.katt_p = katt_p
-        self.katt_d = katt_d
-        self.kpr = kpr
+        self.kpz = parameters.kpz
+        self.kdz = parameters.kdz
+        self.katt_p = parameters.katt_p
+        self.katt_d = parameters.katt_d
+        self.kpr = parameters.kpr
 
         self.velocity_ref = np.zeros(3)
         self.position_ref = np.zeros(3)
         self.angular_vel_ref = np.zeros(3)
 
-    def update(
-        self, 
-        euler: np.ndarray, 
-        angular_vel: np.ndarray, 
-        n_des: np.ndarray,
-        position: np.ndarray,
-        velocity: np.ndarray,
-        lambd: np.ndarray
-    )->np.ndarray:
-        phi = euler[0]
-        theta = euler[1]
-        psi = euler[2]
+    def __call__(self, state, n_des, lambda_, nB, r_ref, Z_ref, Vz_ref):
+        phi = state.att[0]
+        theta = state.att[1]
+        psi = state.att[2]
+        
+        p = state.omegaf[0]
+        q = state.omegaf[1]
+        r = state.omegaf[2]
 
-        nx, ny = 0, 0
+        vZ = state.vel[2]
+        Z = state.pos[2]
 
-        p = angular_vel[0]
-        q = angular_vel[1]
-        r = angular_vel[2]
+        nx = nB[0]
+        ny = nB[1]
+
+        chi = self.chi
+        if state.fail_id == 1 or state.fail_id == 3: 
+            chi = np.pi - self.chi
+        
+        ################################
 
         Rib = np.array([
             [np.cos(psi) * np.cos(theta), np.cos(psi) * np.sin(theta) * np.sin(phi) - np.sin(psi) * np.cos(phi), np.cos(psi) * np.sin(theta) * np.cos(phi) + np.sin(psi) * np.sin(phi)],
@@ -51,8 +53,8 @@ class PositionController:
         Y = np.array([[h1 - nx], [h2 - ny]])
 
         dY = np.array([
-            [-h3 * q + h2 * r + lambd[0]],
-            [h3 * p + h1 * r + lambd[1]]
+            [-h3 * q + h2 * r + lambda_[0]],
+            [h3 * p + h1 * r + lambda_[1]]
         ])
 
         Y = np.matmul(
@@ -66,7 +68,7 @@ class PositionController:
                 [-np.sin(self.chi), np.cos(self.chi)]
                 ]), dY)
 
-        nu1 = - self.kdz * (velocity[2] - self.velocity_ref[2]) - self.kpz * (position[2] - self.position_ref[2])
+        nu1 = - self.kdz * (vZ - Vz_ref) - self.kpz * (Z - Z_ref)
         nu2 =  - self.katt_d * dY[0] - self.katt_p * Y[0]
         nu3 =  - self.katt_d * dY[1] - self.katt_p * Y[1]
         nu4 =  - self.kpr * (r-self.angular_vel_ref[2])
@@ -78,9 +80,9 @@ class PositionController:
         return nu
 
 if __name__ == '__main__':
-    pc = PositionController(1, 1, 9.81, 0.1, 0.1, 0.1, 0.1, 0.1)
+    pc = PseudoControllAttINDI(1, 1, 9.81, 0.1, 0.1, 0.1, 0.1, 0.1)
     
-    response = pc.update(
+    response = pc(
         np.array([0, 0,0.8 ]),
         np.array([1, 0.1, 8 ]),
         np.array([0, 0, 1 ]),
