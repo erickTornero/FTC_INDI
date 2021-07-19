@@ -40,25 +40,25 @@ class INDIController:
 
     def inner_controller(self, state, n_des, r_sp):
         # Subsystem
-        Ts = time.time()
+        Tc = time.time()
         ssres = self.subsystem(state, n_des)
         h0, posdd, U0, U1 = ssres['h0'], ssres['posdd'], ssres['U0'], ssres['U1']
 
         #pseudo controll att indi
-        n_des_f = self.low_pass_ndes(n_des, Ts)
-        _lambda = self.derivator_ndes(n_des_f)
+        n_des_f = self.low_pass_ndes(n_des, Tc)
+        _lambda = self.derivator_ndes(n_des_f, Tc)
         _lambda = self.saturator_lambda(_lambda)
 
         nB = self._getnB(state.fail_id)
         Z_ref = state.zTarget
-        Z_ref_f = self.low_pass_zTarg(Z_ref, Ts)
-        Vz_ref = self.derivator_z(Z_ref_f)
+        Z_ref_f = self.low_pass_zTarg(Z_ref, Tc)
+        Vz_ref = self.derivator_z(Z_ref_f, Tc)
 
         nu, dY, Y = self.pseudo_controll_att(state, n_des_f, _lambda, nB, r_sp, Z_ref, Vz_ref)
 
         ## Allocation Attitude Indi
-        dY_delayed = self.low_pass_dY(dY, Ts)
-        ddY = self._discrete_delay(dY_delayed)
+        dY_f = self.low_pass_dY(dY, Tc)
+        ddY = self.derivator_dY(dY_f, Tc)
 
         U, ddy0, dU = self.allocation_att_indi(state, nu, ddY, h0, posdd, U0, U1)
 
@@ -68,9 +68,6 @@ class INDIController:
 
     def _U2Omega(self, U):
         return np.sqrt(np.abs(U)) * np.sign(U)
-
-    def _subsystem(self, n_des, states):
-        pass
 
     def _getnB(self, fail_id):
         """inner loop, get nB"""
@@ -90,9 +87,6 @@ class INDIController:
             n = [0, 0, -1]
 
         return n
-
-    def _discrete_delay(signal):
-        raise NotImplementedError("")
 
 
 class Subsystem:
