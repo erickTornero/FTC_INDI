@@ -99,6 +99,10 @@ class Parameters:
             self.position_Ki_vel = parameters['position_Ki_vel']  # velocity gains
             self.position_Kp_vel = parameters['position_Kp_vel']
     
+    @property
+    def gravity(self):
+        return self.g
+        
     """
     @property
     def freq(self):

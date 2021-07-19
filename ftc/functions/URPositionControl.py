@@ -22,7 +22,7 @@ def URpositionControl(inputs, state, par, errorInt):
     a_ref = par.position_Kp_vel * errorVel + par.position_Ki_vel * errorInt
     a_ref[2] = a_ref[2] - par.g
 
-    maxLateral = np.abs(par.g*np.tan(maxAngle))
+    maxLateral = np.abs(par.g * np.tan(maxAngle))
     latRatio = np.sqrt(a_ref[0]**2 + a_ref[1]**2)/maxLateral
     a_ref[0] = a_ref[0]/(max(latRatio,1))
     a_ref[1] = a_ref[1]/(max(latRatio,1))

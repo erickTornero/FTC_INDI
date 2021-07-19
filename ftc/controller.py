@@ -7,11 +7,12 @@ from ftc.parameters import Parameters
 from math import sin, cos
 
 class INDIController:
-    def __init__(self, parameters: dict):
-        self.parameters = Parameters(parameters)
+    def __init__(self, parameters=None):
+        parameters = Parameters(parameters)
+        self.parameters = parameters
         self.errorInt = np.zeros(3, dtype=np.float32)
         #self.parameters = parameters
-        
+        import pdb; pdb.set_trace()
         #Low pass Filters
         self.low_pass_ndes = LowpassFilter(1, parameters.t_indi)
         self.low_pass_zTarg = LowpassFilter(1, parameters.t_indi)
@@ -42,8 +43,8 @@ class INDIController:
 
     def inner_controller(self, state, n_des, r_sp):
         # Subsystem
-        Tc = time.time()
-        ssres = self.subsystem(state, n_des)
+        Tc = time.time()    # Current time
+        ssres = self.subsystem(state, n_des, Tc)
         h0, posdd, U0, U1 = ssres['h0'], ssres['posdd'], ssres['U0'], ssres['U1']
 
         #pseudo controll att indi
@@ -99,15 +100,14 @@ class Subsystem:
         self.lowpass_U0 = LowpassFilter(1, parameters.t_indi)
         self.lowpass_U1 = LowpassFilter(1, parameters.t_indi)
 
-    def __call__(self, states, n_des):
-        Ts = time.time()
+    def __call__(self, states, n_des, Tc):
         h = self._Hestimator(n_des, states.att)
-        h0 = self.lowpass_H(h, Ts)
+        h0 = self.lowpass_H(h, Tc)
         aZ_filtered = self.lowpass_az(states.acc[2])
         posdd2 = self._posdd2Estimator(aZ_filtered, states.att)
         U_mea = self._omega2U(states.w_speeds)
-        U0 = self.lowpass_U0(U_mea, Ts)
-        U1 = self.lowpass_U1(states.omegaf[2], Ts)
+        U0 = self.lowpass_U0(U_mea, Tc)
+        U1 = self.lowpass_U1(states.omegaf[2], Tc)
 
         return {
             'h0': h0,
@@ -115,6 +115,12 @@ class Subsystem:
             'U0': U0,
             'U1': U1
         }
+    
+    def init_filters(self, t):
+        self.lowpass_H.start(0, t)
+        self.lowpass_az.start(0, t)
+        self.lowpass_U0.start(0, t)
+        self.lowpass_U1.start(0, t)
 
     def _Hestimator(self, n_des, att):
         phi = att[0]
