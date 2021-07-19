@@ -17,6 +17,12 @@ class INDIController:
 
         #Saturators
         self.saturator_w = Saturator(parameters.w_min, parameters.w_max)
+        self.saturator_lambda = Saturator(-0.5, 0.5)
+
+        #Derivators
+        self.derivator_ndes = DiscreteTimeDerivative() ##WARN: Not specifying the period of sampling Ts 
+        self.derivator_z = DiscreteTimeDerivative() ##WARN: Not specifying the period of sampling Ts
+        self.derivator_dY = DiscreteTimeDerivative() ##WARN: Not specifying the period of sampling Ts
         
         self.pseudo_controll_att = PseudoControllAttINDI(parameters)
         self.allocation_att_indi = AllocationAttINDI(parameters)
@@ -40,10 +46,13 @@ class INDIController:
 
         #pseudo controll att indi
         n_des_f = self.low_pass_ndes(n_des, Ts)
-        _lambda = self._delay_saturation(n_des_f)
+        _lambda = self.derivator_ndes(n_des_f)
+        _lambda = self.saturator_lambda(_lambda)
+
         nB = self._getnB(state.fail_id)
         Z_ref = state.zTarget
-        Vz_ref = self._discrete_delay(self.low_pass_zTarg(Z_ref, Ts))
+        Z_ref_f = self.low_pass_zTarg(Z_ref, Ts)
+        Vz_ref = self.derivator_z(Z_ref_f)
 
         nu, dY, Y = self.pseudo_controll_att(state, n_des_f, _lambda, nB, r_sp, Z_ref, Vz_ref)
 
@@ -144,6 +153,46 @@ class Saturator:
 
     def __call__(self, value):
         return np.clip(value, self.min_val, self.max_val)
+
+class DiscreteTimeDerivative:
+    def __init__(self, T_sampling=None):
+        """
+            Discrete time derivative
+            y(tn) = K * (u(tn) - u(tn-1))/T
+            T: Period of sampling
+            K: Gain
+            u(tn): signal
+            u(tn-1): previous time signal
+            y(tn): Derivative of the signal
+        """
+        self.T_prev = 0
+        self.V_prev = 0
+        self.T_sampling = T_sampling
+
+    
+    def start(self, value=0, Tc=0):
+        self.T_prev = Tc
+        self.V_prev = value
+    
+    def __call__(self, value, Tc=None):
+        """
+            Return the derivative of the signal
+            @value: value of the signal
+            @Tc: optional arg, if you not specify it. You must provide T_sampling in constructor
+        """
+        if Tc is None:
+            if self.T_sampling is not None: 
+                signalD = (value - self.V_prev)/self.T_sampling
+            else:
+                raise ValueError("""You must specidy the Period of sampling Ts, or give the
+                                    Current time TC""")
+        else:
+            dT = Tc - self.T_prev
+            signalD = (value - self.V_prev)/dT
+            self.T_prev = Tc
+        
+        self.V_prev = signalD
+        return signalD
 
 
 class PseudoAttINDIControl:
