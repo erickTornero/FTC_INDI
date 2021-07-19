@@ -9,20 +9,81 @@ class INDIController:
     def __init__(self, parameters):
         self.errorInt = np.zeros(3, dtype=np.float32)
         self.parameters = parameters
-        self.pseudo_controll_att = PseudoAttINDIControl(parameters)
-        self.allocation_att_indi = AllocationAttINDIControl(parameters)
+        
+        #Low pass Filters
+        self.low_pass_ndes = LowpassFilter(1, parameters.t_indi)
+        self.low_pass_zTarg = LowpassFilter(1, parameters.t_indi)
+        self.low_pass_dY = LowpassFilter(1, parameters.t_indi)
+
+        #Saturators
+        self.saturator_w = Saturator(parameters.w_min, parameters.w_max)
+        
+        self.pseudo_controll_att = PseudoControllAttINDI(parameters)
+        self.allocation_att_indi = AllocationAttINDI(parameters)
         self.subsystem = Subsystem(parameters)
+
+    def __call__(self, state, inputs):
+        n_des, r_cmd = self.outer_controller(state, inputs)
+        w_cmd = self.inner_controller(state, n_des, r_cmd)
+        return w_cmd
 
     def outer_controller(self, state, inputs):
         n_des, self.errorInt = URPositionControl(inputs, state, self.parameters, self.errorInt)
         r_cmd = URYawControl(inputs, state, self.parameters)
         return n_des, r_cmd
 
-    def inner_controller(self):
-        pass
+    def inner_controller(self, state, n_des, r_sp):
+        # Subsystem
+        Ts = time.time()
+        ssres = self.subsystem(state, n_des)
+        h0, posdd, U0, U1 = ssres['h0'], ssres['posdd'], ssres['U0'], ssres['U1']
+
+        #pseudo controll att indi
+        n_des_f = self.low_pass_ndes(n_des, Ts)
+        _lambda = self._delay_saturation(n_des_f)
+        nB = self._getnB(state.fail_id)
+        Z_ref = state.zTarget
+        Vz_ref = self._discrete_delay(self.low_pass_zTarg(Z_ref, Ts))
+
+        nu, dY, Y = self.pseudo_controll_att(state, n_des_f, _lambda, nB, r_sp, Z_ref, Vz_ref)
+
+        ## Allocation Attitude Indi
+        dY_delayed = self.low_pass_dY(dY, Ts)
+        ddY = self._discrete_delay(dY_delayed)
+
+        U, ddy0, dU = self.allocation_att_indi(state, nu, ddY, h0, posdd, U0, U1)
+
+        w_cmd = self._U2Omega(U)
+        w_cmd = self.saturator_w(w_cmd)
+        return w_cmd
+
+    def _U2Omega(self, U):
+        return np.sqrt(np.abs(U)) * np.sign(U)
 
     def _subsystem(self, n_des, states):
         pass
+
+    def _getnB(self, fail_id):
+        """inner loop, get nB"""
+        a = self.parameters.axis_tilt
+        if self.parameters.DRF_enable == 0 or self.parameters.DRF_enable == 1:
+            if fail_id == 0:
+                n = [-a, a, -1]
+            elif fail_id == 1:
+                n = [-a, -a, -1]
+            elif fail_id == 2:
+                n = [a, -a, -1]
+            elif fail_id == 3:
+                n = [ a, a, -1]
+            else:
+                n = [0, 0, -1]
+        else:
+            n = [0, 0, -1]
+
+        return n
+
+    def _discrete_delay(signal):
+        raise NotImplementedError("")
 
 
 class Subsystem:
@@ -75,6 +136,14 @@ class Subsystem:
         U  = np.zeros(4)
         U = w_speeds ** 2.0
         return U
+
+class Saturator:
+    def __init__(self, min_val, max_val):
+        self.min_val = min_val
+        self.max_val = max_val
+
+    def __call__(self, value):
+        return np.clip(value, self.min_val, self.max_val)
 
 
 class PseudoAttINDIControl:

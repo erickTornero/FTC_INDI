@@ -74,7 +74,7 @@ class PseudoControllAttINDI:
             [nu1], [nu2[0]], [nu3[0]], [nu4],
         ])
 
-        return nu
+        return nu, dY, Y
 
 if __name__ == '__main__':
     pc = PseudoControllAttINDI(1, 1, 9.81, 0.1, 0.1, 0.1, 0.1, 0.1)
