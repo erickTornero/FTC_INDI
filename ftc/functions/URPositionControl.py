@@ -4,7 +4,7 @@ def URpositionControl(inputs, state, par, errorInt):
     maxAngle = par.position_maxAngle
 
     #position control
-    errorPos = [inputs.xTarget, inputs.yTarget, inputs.zTarget]  - state.posf
+    errorPos = [inputs.xTarget, inputs.yTarget, inputs.zTarget]  - state.pos
 
     velTarget = par.position_Kp_pos * errorPos
     maxVel = par.position_maxVel
@@ -13,7 +13,7 @@ def URpositionControl(inputs, state, par, errorInt):
     state.pos_ref = [inputs.xTarget, inputs.yTarget, inputs.zTarget]
 
     # velocity control
-    errorVel = velTarget - state.velf
+    errorVel = velTarget - state.vel
     errorInt = errorInt + errorVel/par.freq
     intLim = par.position_intLim
     errorInt = np.clip(errorInt,-intLim, intLim)
