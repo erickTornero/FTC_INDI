@@ -7,7 +7,6 @@ from ftc.parameters import Parameters
 
 class PseudoControllAttINDI:
     def __init__(self, parameters: Parameters):
-        super(PseudoControllAttINDI, self).__init__(parameters)
         self.mass = parameters.mass
         self.chi = parameters.chi/57.3
         self.gravity = parameters.gravity

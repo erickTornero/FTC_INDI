@@ -134,7 +134,7 @@ class AllocationAttINDI:
                     fail_id = [1, 3]
         else:
             fail_id = 1
-            
+
         if self.double_rotor:
             G[:, fail_id] = np.zeros((4, len(fail_id)))
             ddy0[2:,:] = np.zeros((2, 1))
@@ -153,7 +153,7 @@ class AllocationAttINDI:
         return U, Y
 
 if __name__ == '__main__':
-    ac = AttitudeController(
+    ac = AllocationAttINDI(
         0.01, 0.01, 0.21, 0.3, 0.25, 0.8, 1.65, 0.1, 0.1
     )
 
