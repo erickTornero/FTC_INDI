@@ -3,23 +3,21 @@
 """
 import numpy as np
 from math import sin, cos
+from ftc.parameters import Parameters
 
 class PseudoControllAttINDI:
-    def __init__(self, parameters): 
+    def __init__(self, parameters: Parameters):
+        super(PseudoControllAttINDI, self).__init__(parameters)
         self.mass = parameters.mass
         self.chi = parameters.chi/57.3
         self.gravity = parameters.gravity
 
         # gains
-        self.kpz = parameters.kpz
-        self.kdz = parameters.kdz
-        self.katt_p = parameters.katt_p
-        self.katt_d = parameters.katt_d
-        self.kpr = parameters.kpr
-
-        self.velocity_ref = np.zeros(3)
-        self.position_ref = np.zeros(3)
-        self.angular_vel_ref = np.zeros(3)
+        self.kpz = parameters.pos_z_p_gain
+        self.kdz = parameters.pos_z_d_gain
+        self.katt_p = parameters.att_p_gain
+        self.katt_d = parameters.att_d_gain
+        self.kpr = parameters.YRC_Kp_r
 
     def __call__(self, state, n_des, lambda_, nB, r_ref, Z_ref, Vz_ref):
         phi = state.att[0]

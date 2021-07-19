@@ -1,12 +1,12 @@
 import numpy as np
 from math import sin, cos
 from scipy.linalg import block_diag
-
+from ftc.parameters import Parameters
 class AllocationAttINDI:
-    def __init__(self, parameters):
-        self.ix = parameters.ix
-        self.iy = parameters.iy
-        self.iz = parameters.iz
+    def __init__(self, parameters: Parameters):
+        self.ix = parameters.Ix
+        self.iy = parameters.Iy
+        self.iz = parameters.Iz
         self.b = parameters.b
         self.l = parameters.l
         self.chi = parameters.chi/57.3
@@ -134,6 +134,7 @@ class AllocationAttINDI:
                     fail_id = [1, 3]
         else:
             fail_id = 1
+            
         if self.double_rotor:
             G[:, fail_id] = np.zeros((4, len(fail_id)))
             ddy0[2:,:] = np.zeros((2, 1))

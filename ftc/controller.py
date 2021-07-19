@@ -3,12 +3,14 @@ import numpy as np
 from ftc.functions import URPositionControl, URYawControl
 from ftc import PseudoControllAttINDI, AllocationAttINDI 
 from ftc.filters import LowpassFilter
+from ftc.parameters import Parameters
 from math import sin, cos
 
 class INDIController:
-    def __init__(self, parameters):
+    def __init__(self, parameters: dict):
+        self.parameters = Parameters(parameters)
         self.errorInt = np.zeros(3, dtype=np.float32)
-        self.parameters = parameters
+        #self.parameters = parameters
         
         #Low pass Filters
         self.low_pass_ndes = LowpassFilter(1, parameters.t_indi)
