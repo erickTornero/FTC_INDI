@@ -14,7 +14,7 @@ args_init_distribution = {
         'angular_speed_std': 1.0,
 }
 
-env = QuadrotorEnvRos(target_pos, crippled_degree, state_space, 100, **args_init_distribution)
+env = QuadrotorEnvRos(np.zeros(3, dtype=np.float32), crippled_degree, state_space, 100, **args_init_distribution)
 
 controller = None#Controller()
 
