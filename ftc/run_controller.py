@@ -6,6 +6,7 @@ crippled_degree = np.array([1.0, 0.0, 1.0, 1.0], dtype=np.float32)
 state_space = ['rotation_matrix', 'euler', 'position', 'linear_vel', 'angular_vel']
 
 args_init_distribution = {
+        'max_radius': 8.2,
         'max_ang_speed': 30,
         'max_radius_init': 6,
         'angle_rad_std': 0.6,

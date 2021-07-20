@@ -10,15 +10,15 @@ class State:
         self.fail_id = None
         self.acc = None
 
-    def update(self, observation, w_speeds, acc):
+    def update(self, observation, w_speeds):
         self.position = observation['position']
         self.quaternion = observation['quaternion']
         self.linear_vel = observation['linear_vel']
         self.angular_vel = observation['angular_vel']
         self.rotation_matrix = observation['rotation_matrix']
         self.euler = observation['euler']
+        self.acc = observation['lin_acc']
         self.w_speeds = w_speeds
-        self.acc = acc
 
     def update_ztarget(self, z_target):
         self.zTarget = z_target

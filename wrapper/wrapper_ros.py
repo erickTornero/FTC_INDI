@@ -10,6 +10,8 @@ from geometry_msgs.msg import Point
 from geometry_msgs.msg import Vector3
 from geometry_msgs.msg import Quaternion
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import Imu
+
 from .utils import euler_from_quaternion, quaternion_matrix, RobotDescription, quaternion_from_euler
 from .state_space import StateSpaceRobots
 import rospy
@@ -55,12 +57,14 @@ class WrapperROSQuad(BaseWrapperROS):
         
         self._sensors_topic_name    =   '/hummingbird/ground_truth/odometry'
         self._actuator_reader     =   '/hummingbird/motor_speed'
+        self._imu_topic_name    =   '/hummingbird/imu'
         #TODO: Fill with correspondent ROS topics
         self._actuators_pub     =   rospy.Publisher('hummingbird/command/motor_speed', Actuators, queue_size=10)
         self._set_states_srv    =   rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
         #self._states_pub        =   None
         self._sensors_subs      =   rospy.Subscriber('/hummingbird/ground_truth/odometry', Odometry, self._callback_sensor_meassurements)
-        
+        self._imu_subs          =   rospy.Subscriber(self._imu_topic_name, Imu, self._callback_imu_meassurements)
+
         self.max_radius         =   kwargs_init['max_radius']
         self.max_ang_speed      =   kwargs_init['max_ang_speed']
         self.max_radius_init    =   kwargs_init['max_radius_init']
@@ -68,6 +72,7 @@ class WrapperROSQuad(BaseWrapperROS):
         self.angular_speed_mean =   kwargs_init['angular_speed_mean']
         self.angular_speed_std  =   kwargs_init['angular_speed_std']
         self.counter = 0
+        self._imu = None
         #self._check_all_systems_ready()
 
     def _set_action_msg(self, action, actuator_publisher=None):
@@ -94,6 +99,14 @@ class WrapperROSQuad(BaseWrapperROS):
         self.counter += 1
         if len(self.actuator_msg.angular_velocities) > 0:
             self._actuators_pub.publish(self.actuator_msg)
+    
+    def _callback_imu_meassurements(self, data):
+        """
+        Returns sensor meassurements data
+        and pass to class variables
+        """
+        # elements of odometry
+        self._imu      =   data
 
     def _set_states(self, position=None, attitude=None, targetpos=None, name=None):
         if targetpos is None: targetpos = self.target_pos
@@ -164,6 +177,12 @@ class WrapperROSQuad(BaseWrapperROS):
 
         if _odom is None: _odom = self._odometry
         if targetpos is None: targetpos = self.target_pos
+        _imu_lecture            =   self._imu
+        if _imu_lecture is not None: 
+            _lin_acc = _imu_lecture.linear_acceleration
+            _lin_acc = np.array([_lin_acc.x, _lin_acc.y, _lin_acc.z], dtype=np.float32)
+        else:
+            _lin_acc = np.zeros(3, dtype=np.float32)
         #TODO: Get the observation from ROS
         pose                    =   _odom.pose.pose
         #pose covariance        =   data.pose.covariance
@@ -194,7 +213,8 @@ class WrapperROSQuad(BaseWrapperROS):
             linear_vel          =   _linvel,
             angular_vel         =   _angvel,
             rotation_matrix     =   _rotation_matrix,
-            euler               =   _euler
+            euler               =   _euler,
+            lin_acc             =   _lin_acc,
         )
 
         self.last_observation   =   observation
@@ -207,6 +227,7 @@ class WrapperROSQuad(BaseWrapperROS):
         """
         _   =   self._check_actuators_ready()
         self._odometry = self._check_all_sensors_ready(self._sensors_topic_name)
+        self._imu = self._check_imu_ready()
 
     def _init_env_variables(self):
         pass
@@ -235,9 +256,7 @@ class WrapperROSQuad(BaseWrapperROS):
         return _topic_data
     
     def _check_imu_ready(self):
-        from sensor_msgs.msg import Imu
-        topic_name  =   '/hummingbird/imu'
-        return self._check_topic_ready(topic_name, Imu)
+        return self._check_topic_ready(self._imu_topic_name, Imu)
 
 
     def _check_actuators_ready(self):
