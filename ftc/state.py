@@ -10,7 +10,7 @@ class State:
         self.fail_id = None
         self.acc = None
 
-    def update(self, observation, w_speeds):
+    def update(self, observation):
         self.position = observation['position']
         self.quaternion = observation['quaternion']
         self.linear_vel = observation['linear_vel']
@@ -18,20 +18,20 @@ class State:
         self.rotation_matrix = observation['rotation_matrix']
         self.euler = observation['euler']
         self.acc = observation['lin_acc']
-        self.w_speeds = w_speeds
-
-    def update_ztarget(self, z_target):
-        self.zTarget = z_target
+        self.w_speeds = observation['w_speeds']
     
     def update_fail_id(self, fail_id):
         self.fail_id = fail_id
+
+    """
+    Unnecessary for the momment id: 300
 
     def update_vel_ref(self, vel_ref):
         self.vel_ref = vel_ref
     
     def update_pos_ref(self, pos_ref):
         self.pos_ref = pos_ref
-
+    """
     @property
     def att(self):
         return self.euler

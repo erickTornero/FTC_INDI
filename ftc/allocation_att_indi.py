@@ -53,7 +53,7 @@ class AllocationAttINDI:
         ])
 
         R = block_diag(1, np.array([[cos(chi), sin(chi)], [-sin(chi), cos(chi)]]), 1)
-        ddy0 = np.array([zdd, ddY, rdot])
+        ddy0 = np.vstack([zdd, ddY, rdot])
         G = np.matmul(R, G0)
 
         if self.DRF_enable and fail_flag >= 0:
@@ -70,7 +70,7 @@ class AllocationAttINDI:
             if self.DRF_enable == 1:
                 G[:, fail_id] = np.zeros((4, len(fail_id)))
                 ddy0[2:,:] = np.zeros((2, 1))
-                G[2:, :] = np.zeros_like(G[2:4, :])
+                G[2:, :] = np.zeros_like(G[2:, :])
                 nu[2:, :] = np.zeros((2, 1)) 
             else:
                 G[:fail_id] = np.zeros((4, 1))

@@ -1,4 +1,7 @@
 import numpy as np
+from ftc.state import State
+from ftc.inputs import Inputs
+from ftc.controller import INDIController
 from wrapper import QuadrotorEnvRos, state_space 
 
 target_pos = np.array([0, 0, 6.0], dtype=np.float32)
@@ -13,16 +16,24 @@ args_init_distribution = {
         'angular_speed_mean': 0,
         'angular_speed_std': 1.0,
 }
+rate = 100
+Ts = 1/rate
+env = QuadrotorEnvRos(np.zeros(3, dtype=np.float32), crippled_degree, state_space, rate, **args_init_distribution)
 
-env = QuadrotorEnvRos(np.zeros(3, dtype=np.float32), crippled_degree, state_space, 100, **args_init_distribution)
-
-controller = None#Controller()
+controller = INDIController(T_sampling=Ts)
 
 max_path_length = 1000
+state = State()
+state.update_fail_id(1)
+inputs = Inputs()
+inputs.updatePositionTarget([0, 0, 6])
+inputs.update_yawTarget(20)
 
 obs = env.reset()
+state.update(env.last_observation)
 cum_reward = 0
 for i in range(max_path_length):
-    control_signal = controller(obs)
+    control_signal = controller(state, inputs)
     obs, reward, done, info,  = env.step(control_signal)
+    state.update(env.last_observation)
     cum_reward += reward

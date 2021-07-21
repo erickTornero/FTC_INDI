@@ -7,43 +7,46 @@ from ftc.parameters import Parameters
 from math import sin, cos
 
 class INDIController:
-    def __init__(self, parameters=None):
+    def __init__(self, parameters=None, T_sampling=None):
         parameters = Parameters(parameters)
+        self.T_sampling = T_sampling
         self.parameters = parameters
         self.errorInt = np.zeros(3, dtype=np.float32)
         #self.parameters = parameters
         import pdb; pdb.set_trace()
         #Low pass Filters
-        self.low_pass_ndes = LowpassFilter(1, parameters.t_indi)
-        self.low_pass_zTarg = LowpassFilter(1, parameters.t_indi)
-        self.low_pass_dY = LowpassFilter(1, parameters.t_indi)
+        self.low_pass_ndes = LowpassFilter(1, parameters.t_indi, T_sampling)
+        self.low_pass_zTarg = LowpassFilter(1, parameters.t_indi, T_sampling)
+        self.low_pass_dY = LowpassFilter(1, parameters.t_indi, T_sampling)
 
         #Saturators
         self.saturator_w = Saturator(parameters.w_min, parameters.w_max)
         self.saturator_lambda = Saturator(-0.5, 0.5)
 
         #Derivators
-        self.derivator_ndes = DiscreteTimeDerivative() ##WARN: Not specifying the period of sampling Ts 
-        self.derivator_z = DiscreteTimeDerivative() ##WARN: Not specifying the period of sampling Ts
-        self.derivator_dY = DiscreteTimeDerivative() ##WARN: Not specifying the period of sampling Ts
+        self.derivator_ndes = DiscreteTimeDerivative(T_sampling) ##WARN: Not specifying the period of sampling Ts 
+        self.derivator_z = DiscreteTimeDerivative(T_sampling) ##WARN: Not specifying the period of sampling Ts
+        self.derivator_dY = DiscreteTimeDerivative(T_sampling) ##WARN: Not specifying the period of sampling Ts
         
         self.pseudo_controll_att = PseudoControllAttINDI(parameters)
         self.allocation_att_indi = AllocationAttINDI(parameters)
-        self.subsystem = Subsystem(parameters)
+        self.subsystem = Subsystem(parameters, T_sampling)
+
+        self.init_filters(time.time())
 
     def __call__(self, state, inputs):
         n_des, r_cmd = self.outer_controller(state, inputs)
-        w_cmd = self.inner_controller(state, n_des, r_cmd)
-        return w_cmd
+        w_cmd = self.inner_controller(state, inputs, n_des, r_cmd)
+        return w_cmd.flatten()
 
     def outer_controller(self, state, inputs):
         n_des, self.errorInt = URPositionControl(inputs, state, self.parameters, self.errorInt)
         r_cmd = URYawControl(inputs, state, self.parameters)
         return n_des, r_cmd
 
-    def inner_controller(self, state, n_des, r_sp):
+    def inner_controller(self, state, inputs, n_des, r_sp):
         # Subsystem
-        Tc = time.time()    # Current time
+        Tc = None#time.time()    # Current time
         ssres = self.subsystem(state, n_des, Tc)
         h0, posdd, U0, U1 = ssres['h0'], ssres['posdd'], ssres['U0'], ssres['U1']
 
@@ -53,7 +56,7 @@ class INDIController:
         _lambda = self.saturator_lambda(_lambda)
 
         nB = self._getnB(state.fail_id)
-        Z_ref = state.zTarget
+        Z_ref = inputs.zTarget
         Z_ref_f = self.low_pass_zTarg(Z_ref, Tc)
         Vz_ref = self.derivator_z(Z_ref_f, Tc)
 
@@ -91,19 +94,27 @@ class INDIController:
 
         return n
 
+    def init_filters(self, t):
+        self.low_pass_dY.start(0, t)
+        self.low_pass_ndes.start(0, t)
+        self.low_pass_zTarg.start(0, t)
+    
+
 
 class Subsystem:
-    def __init__(self, parameters):
+    def __init__(self, parameters, T_sampling=None):
         self.parameters = parameters
-        self.lowpass_H = LowpassFilter(1, parameters.t_indi)
-        self.lowpass_az = LowpassFilter(1, parameters.t_indi)
-        self.lowpass_U0 = LowpassFilter(1, parameters.t_indi)
-        self.lowpass_U1 = LowpassFilter(1, parameters.t_indi)
+        self.lowpass_H = LowpassFilter(1, parameters.t_indi, T_sampling)
+        self.lowpass_az = LowpassFilter(1, parameters.t_indi, T_sampling)
+        self.lowpass_U0 = LowpassFilter(1, parameters.t_indi, T_sampling)
+        self.lowpass_U1 = LowpassFilter(1, parameters.t_indi, T_sampling)
+
+        self.init_filters(time.time())
 
     def __call__(self, states, n_des, Tc):
         h = self._Hestimator(n_des, states.att)
         h0 = self.lowpass_H(h, Tc)
-        aZ_filtered = self.lowpass_az(states.acc[2])
+        aZ_filtered = self.lowpass_az(states.acc[2], Tc)
         posdd2 = self._posdd2Estimator(aZ_filtered, states.att)
         U_mea = self._omega2U(states.w_speeds)
         U0 = self.lowpass_U0(U_mea, Tc)
@@ -133,7 +144,7 @@ class Subsystem:
             [-sin(theta), cos(theta) * sin(phi), cos(theta) * cos(phi)]
         ])
 
-        h = np.linalg.lstsq(R_IB, n_des)
+        h = np.linalg.lstsq(R_IB, n_des.reshape(-1, 1))[0]
         return h
     
     def _posdd2Estimator(self, az, att):
@@ -145,6 +156,8 @@ class Subsystem:
 
     def _omega2U(self, w_speeds):
         U  = np.zeros(4)
+        if type(w_speeds) != np.ndarray: w_speeds = np.array(w_speeds)
+        w_speeds = w_speeds.reshape(-1, 1)
         U = w_speeds ** 2.0
         return U
 

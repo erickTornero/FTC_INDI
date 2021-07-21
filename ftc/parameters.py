@@ -28,7 +28,7 @@ class Parameters:
 
             self.k0 = 1.9e-6    # propeller thrust coefficient
             self.t0 = 1.9e-8    # torque coefficient
-            self.w_max = 1200   # max / min propeller rotation rates, [rad/s]
+            self.w_max = 838   # max / min propeller rotation rates, [rad/s]
             self.w_min = 0
 
             # INDI reduced att control

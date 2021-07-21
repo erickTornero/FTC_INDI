@@ -207,6 +207,10 @@ class WrapperROSQuad(BaseWrapperROS):
         
         _euler             =   euler_from_quaternion(_quaternion if _rotation_matrix is None else _rotation_matrix) if 'euler' in set(self.state_space.names) else None
 
+        # get wspeeds
+        _w_speeds = None
+        if self.actuator_msg.angular_velocities is not None:
+            _w_speeds = self.actuator_msg.angular_velocities
         observation =   dict(
             position            =   _position,
             quaternion          =   _quaternion,
@@ -215,6 +219,7 @@ class WrapperROSQuad(BaseWrapperROS):
             rotation_matrix     =   _rotation_matrix,
             euler               =   _euler,
             lin_acc             =   _lin_acc,
+            w_speeds            =   _w_speeds,
         )
 
         self.last_observation   =   observation

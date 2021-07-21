@@ -1,6 +1,6 @@
 import numpy as np
 #errorInt = [0, 0, 0]
-def URpositionControl(inputs, state, par, errorInt):
+def URPositionControl(inputs, state, par, errorInt):
     maxAngle = par.position_maxAngle
 
     #position control
@@ -9,9 +9,11 @@ def URpositionControl(inputs, state, par, errorInt):
     velTarget = par.position_Kp_pos * errorPos
     maxVel = par.position_maxVel
     velTarget = np.clip(velTarget,-maxVel, maxVel)
+    """
+    Unnecessary for the momment id: 300
     state.vel_ref[:2] = velTarget[:2]
     state.pos_ref = [inputs.xTarget, inputs.yTarget, inputs.zTarget]
-
+    """
     # velocity control
     errorVel = velTarget - state.vel
     errorInt = errorInt + errorVel/par.freq
