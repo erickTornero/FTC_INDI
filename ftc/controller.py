@@ -30,7 +30,9 @@ class INDIController:
         self.allocation_att_indi = AllocationAttINDI(parameters)
         self.subsystem = Subsystem(parameters, T_sampling)
 
-        self.init_filters(time.time())
+        start_time = time.time()
+        self.init_filters(start_time)
+        self.derivator_z.start(6, start_time) #TODO: hardcoded
 
     def __call__(self, state, inputs):
         n_des, r_cmd = self.outer_controller(state, inputs)
@@ -47,6 +49,9 @@ class INDIController:
         Tc = None#time.time()    # Current time
         ssres = self.subsystem(state, n_des, Tc)
         h0, posdd, U0, U1 = ssres['h0'], ssres['posdd'], ssres['U0'], ssres['U1']
+        if posdd > 10000:
+            import pdb; pdb.set_trace()
+            x = 32
 
         #pseudo controll att indi
         n_des_f = self.low_pass_ndes(n_des, Tc)
@@ -95,7 +100,7 @@ class INDIController:
     def init_filters(self, t):
         self.low_pass_dY.start(0, t)
         self.low_pass_ndes.start(0, t)
-        self.low_pass_zTarg.start(0, t)
+        self.low_pass_zTarg.start(6, t) # TODO: hardcoded
     
 
 

@@ -7,7 +7,7 @@ class AllocationAttINDI:
         self.ix = parameters.Ix
         self.iy = parameters.Iy
         self.iz = parameters.Iz
-        self.b = parameters.b
+        self.b = np.sqrt(parameters.b**2 + parameters.l**2)
         self.l = parameters.l
         self.chi = parameters.chi/57.3
         self.mass = parameters.mass
@@ -77,14 +77,24 @@ class AllocationAttINDI:
                 ddy0[3] = 0
                 G[3, :] = np.zeros_like(G[3, :])
                 nu[3] = 0
-
-        dU = np.matmul(np.linalg.pinv(G), nu - ddy0)
+        try:
+            dU = np.matmul(np.linalg.pinv(G), nu - ddy0)
+        except np.linalg.LinAlgError as e:
+            import pdb; pdb.set_trace()
+            x = 21
+        
+        if (self._check_nan(dU)):
+            import pdb; pdb.set_trace()
+            x=22
 
         Y = (nu - ddy0)
         U = U0 + dU
         if fail_flag > 0:
             U[fail_id] = 0.0
         return U, Y, dU
+    
+    def _check_nan(self, v: np.ndarray):
+        return np.isnan(v).any()
         
 
 

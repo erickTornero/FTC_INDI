@@ -38,7 +38,7 @@ inputs.update_yawTarget(20)
 obs = env.reset()
 state.update(env.last_observation)
 cum_reward = 0
-#import pdb; pdb.set_trace()
+import pdb; pdb.set_trace()
 for i in range(max_path_length):
     control_signal = controller(state, inputs)
     obs, reward, done, info,  = env.step(control_signal)
