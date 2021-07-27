@@ -7,13 +7,11 @@ from ftc.parameters import Parameters
 from math import sin, cos
 
 class INDIController:
-    def __init__(self, parameters=None, T_sampling=None):
-        parameters = Parameters(parameters)
+    def __init__(self, parameters:Parameters, T_sampling:float=None):
         self.T_sampling = T_sampling
         self.parameters = parameters
         self.errorInt = np.zeros(3, dtype=np.float32)
         #self.parameters = parameters
-        import pdb; pdb.set_trace()
         #Low pass Filters
         self.low_pass_ndes = LowpassFilter(1, parameters.t_indi, T_sampling)
         self.low_pass_zTarg = LowpassFilter(1, parameters.t_indi, T_sampling)

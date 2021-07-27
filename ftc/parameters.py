@@ -1,6 +1,8 @@
+import json
 class Parameters:
-    def __init__(self, parameters=None):
-        if parameters is None:
+    def __init__(self, quad_params_path=None, control_params_path=None):
+        if quad_params_path is None or control_params_path is None:
+            print("WARNING: Running with defailt parameters")
             # Controller related Parameters
             # Controls
             self.freq = 500 # control frequency
@@ -56,6 +58,7 @@ class Parameters:
         else:
             # Controller related Parameters
             # Controls
+            parameters = self.load_params(quad_params_path, control_params_path)
             self.freq = parameters['freq'] # control frequency
 
             self.fail_id =  parameters['fail_id']
@@ -63,16 +66,16 @@ class Parameters:
             self.fail_time =  parameters['fail_time']
 
             # drone self
-            self.b = parameters['b']    # [m]
-            self.l = parameters['l']
+            self.b = parameters['body_width']    # b -> key [m]
+            self.l = parameters['body_height']    # l -> key
             self.Ix = parameters['Ix']    # [kg m^2]
             self.Iy = parameters['Iy']
             self.Iz = parameters['Iz']
             self.mass = parameters['mass']   # [kg]
-            self.g = parameters['g']
+            self.g = parameters['gravity']   #key -> g
 
-            self.k0 = parameters['k0']    # propeller thrust coefficient
-            self.t0 = parameters['t0']    # torque coefficient
+            self.k0 = parameters['motor_constant']    # k0 key -> propeller thrust coefficient
+            self.t0 = parameters['moment_constant']    # t0 key -> torque coefficient
             self.w_max = parameters['w_max']   # max / min propeller rotation rates, [rad/s]
             self.w_min = parameters['w_min']
 
@@ -92,7 +95,7 @@ class Parameters:
             self.YRC_Kp_psi = parameters['YRC_Kp_psi']
 
             # position control
-            self.position_maxAngle = parameters['position_maxAngle']    # maximum thrust tilt angle [rad]
+            self.position_maxAngle = parameters['position_maxAngle']/57.3    # maximum thrust tilt angle [rad]
             self.position_Kp_pos = parameters['position_Kp_pos']  # position control gains
             self.position_maxVel = parameters['position_maxVel']          # maximum velocity
             self.position_intLim = parameters['position_intLim'] 
@@ -102,7 +105,22 @@ class Parameters:
     @property
     def gravity(self):
         return self.g
-        
+
+    def load_params(self, quad_params_fp, control_params_fp):
+        q_params = self._read_quad_params(quad_params_fp)
+        c_params = self._read_control_params(control_params_fp)
+        return {**q_params, **c_params}
+
+    def _read_quad_params(self, quad_params_fp):
+        return self._open_file(quad_params_fp)
+
+    def _read_control_params(self, control_params_fp):
+        return self._open_file(control_params_fp)
+
+    def _open_file(self, file_path):
+        with open(file_path, 'r') as fp:
+            return json.load(fp)
+            
     """
     @property
     def freq(self):

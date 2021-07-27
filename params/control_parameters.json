@@ -1,0 +1,23 @@
+{
+    "freq": 500,
+    "fail_id": [3],
+    "DRF_enable": 1,
+    "fail_time": 0.0,
+    "k0": 1.9e-6,
+    "t0": 1.9e-8,
+    "chi": 105,
+    "pos_z_p_gain": 5,
+    "pos_z_d_gain": 3,
+    "axis_tilt": 0.0,
+    "att_p_gain": 200,
+    "att_d_gain": 30,
+    "t_indi": 0.02,
+    "YRC_Kp_r": 5.0,
+    "YRC_Kp_psi": 5.0,
+    "position_maxAngle": 30,
+    "position_Kp_pos": [1.5, 1.5, 1.5],
+    "position_maxVel": 10,
+    "position_intLim": 5.0,
+    "position_Ki_vel": [1.0, 1.0, 1.0],
+    "position_Kp_vel": [2.0, 2.0, 2.0]
+}
