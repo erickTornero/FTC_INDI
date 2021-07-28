@@ -11,13 +11,13 @@ class State:
         self.acc = None
 
     def update(self, observation):
-        self.position = observation['position']
+        self.position = self.invert(observation['position'])
         self.quaternion = observation['quaternion']
-        self.linear_vel = observation['linear_vel']
-        self.angular_vel = observation['angular_vel']
+        self.linear_vel = self.invert(observation['linear_vel'])
+        self.angular_vel = self.invert(observation['angular_vel'])
         self.rotation_matrix = observation['rotation_matrix']
-        self.euler = observation['euler']
-        self.acc = observation['lin_acc']
+        self.euler = self.invert(observation['euler'])
+        self.acc = self.invert(observation['lin_acc'])
         self.w_speeds = observation['w_speeds']
     
     def update_fail_id(self, fail_id):
@@ -32,6 +32,15 @@ class State:
     def update_pos_ref(self, pos_ref):
         self.pos_ref = pos_ref
     """
+
+    def invert(self, a):
+        if type(a)==tuple:
+            a = list(a)
+        a[2] = -a[2]
+        a[1] = -a[1]
+        return a
+        
+
     @property
     def att(self):
         return self.euler

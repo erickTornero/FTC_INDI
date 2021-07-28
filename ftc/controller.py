@@ -32,7 +32,7 @@ class INDIController:
 
         start_time = time.time()
         self.init_filters(start_time)
-        self.derivator_z.start(6, start_time) #TODO: hardcoded
+        self.derivator_z.start(-6, start_time) #TODO: hardcoded
 
     def __call__(self, state, inputs):
         n_des, r_cmd = self.outer_controller(state, inputs)
@@ -102,7 +102,7 @@ class INDIController:
     def init_filters(self, t):
         self.low_pass_dY.start(0, t)
         self.low_pass_ndes.start(0, t)
-        self.low_pass_zTarg.start(6, t) # TODO: hardcoded
+        self.low_pass_zTarg.start(-6, t) # TODO: hardcoded
     
 
 
@@ -211,7 +211,7 @@ class DiscreteTimeDerivative:
             signalD = (value - self.V_prev)/dT
             self.T_prev = Tc
         
-        self.V_prev = signalD
+        self.V_prev = value
         return signalD
 
 

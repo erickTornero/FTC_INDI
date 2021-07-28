@@ -32,7 +32,7 @@ max_path_length = 250
 state = State()
 state.update_fail_id(1)
 inputs = Inputs()
-inputs.updatePositionTarget([0, 0, 6])
+inputs.updatePositionTarget([0, 0, -6])
 inputs.update_yawTarget(20)
 
 obs = env.reset()
