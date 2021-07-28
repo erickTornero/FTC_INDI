@@ -13,7 +13,7 @@ class AllocationAttINDI:
         self.mass = parameters.mass
         self.k = parameters.k0
         self.t = parameters.t0
-        self.beta = np.arctan(self.b/self.l)
+        self.beta = np.arctan(parameters.b/self.l)
         self.double_rotor = True
         self.DRF_enable = parameters.DRF_enable
 
@@ -22,7 +22,7 @@ class AllocationAttINDI:
         phi = state.att[0]
         theta = state.att[1]
         chi = self.chi
-        if state.fail_id == 1 or state.fail_id == 3:
+        if state.fail_id == 0 or state.fail_id == 2:
             chi = np.pi - self.chi
 
         h1 = h0[0]
@@ -66,7 +66,7 @@ class AllocationAttINDI:
         else:
             fail_id = fail_flag
         
-        if fail_flag > 0:
+        if fail_flag >= 0:
             if self.DRF_enable == 1:
                 G[:, fail_id] = np.zeros((4, len(fail_id)))
                 ddy0[2:,:] = np.zeros((2, 1))
@@ -74,9 +74,9 @@ class AllocationAttINDI:
                 nu[2:, :] = np.zeros((2, 1)) 
             else:
                 G[:fail_id] = np.zeros((4, 1))
-                ddy0[3] = 0
+                ddy0[3,:] = 0  #assuming vector nx1
                 G[3, :] = np.zeros_like(G[3, :])
-                nu[3] = 0
+                nu[3,:] = 0#assuming vector nx1
         try:
             dU = np.matmul(np.linalg.pinv(G), nu - ddy0)
         except np.linalg.LinAlgError as e:
@@ -163,17 +163,32 @@ class AllocationAttINDI:
         return U, Y
 
 if __name__ == '__main__':
-    ac = AllocationAttINDI(
-        0.01, 0.01, 0.21, 0.3, 0.25, 0.8, 1.65, 0.1, 0.1
-    )
+    params = Parameters()
+    ac = AllocationAttINDI(params)
+    from ftc.state import State
+    state = State()
+    state.update({
+        'position': None,
+        'quaternion': None,
+        'linear_vel': None,
+        'angular_vel': None,
+        'rotation_matrix': None,
+        'euler': np.array([0.0030, -0.0017, -1.7837e-04]),
+        'lin_acc': None,
+        'w_speeds': None
+    })
 
-    response = ac.update(
-        np.array([0.1, 0.3, 0.01]),
-        np.array([0.2, 0.8, 0.22]),
-        3.4, 3.3, 2.1, 
-        np.array([0.43, 0.223, 0.01, 0.81]).reshape(4,1),
-        np.array([2, 2, 2, 2]).reshape(4, 1),
-        [1]
-    )
-
-    print(response)
+    state.update_fail_id(2)
+    nu = np.array([-0.0037, 9.0707, 14.0776, 4.4383]).reshape(-1, 1)
+    ddY = np.array([-46.2620, -28.0941]).reshape(-1, 1)
+    h0 = np.array([9.9356e-05, 4.9287e-04, -1.0]).reshape(-1, 1)
+    zdd = 8.3969
+    U0 = np.array([2.4388e04, 2.4388e04, 2.4388e04, 2.6967e04]).reshape(-1, 1)
+    rdot = -0.1227
+    U, Y, dU = ac(state, nu, ddY, h0, zdd, U0, rdot)
+    
+    #expected
+    # U = np.array([0, 1.0039e06, 0, 0.7055e06]).reshape(-1, 1)
+    # Y = np.array([-8.4006, 55.3327, 0, 0]).reshape(-1, 1)
+    # dU = np.array([0, 9.7959e05, 0, 6.7852e05]).reshape(-1, 1)
+        

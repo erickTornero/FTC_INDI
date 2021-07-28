@@ -94,6 +94,8 @@ class INDIController:
                 n = [0, 0, -1]
         else:
             n = [0, 0, -1]
+        
+        n = np.array(n)
 
         return n
 

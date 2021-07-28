@@ -30,11 +30,13 @@ class PseudoControllAttINDI:
         vZ = state.vel[2]
         Z = state.pos[2]
 
+        lambda_ = lambda_.flatten()
+        nB = nB.flatten()
         nx = nB[0]
         ny = nB[1]
 
         chi = self.chi
-        if state.fail_id == 1 or state.fail_id == 3: 
+        if state.fail_id == 0 or state.fail_id == 2: 
             chi = np.pi - self.chi
         
         ################################
@@ -44,7 +46,8 @@ class PseudoControllAttINDI:
             [np.sin(psi) * np.cos(theta) , np.sin(psi) * np.sin(theta) * np.sin(phi) + np.cos(psi) * np.cos(phi), np.sin(psi) * np.sin(theta) * np.cos(phi) - np.cos(psi) * np.sin(phi)],
             [-np.sin(theta), np.cos(theta) * np.sin(phi), np.cos(theta) * np.cos(phi)]
         ])
-        h = np.matmul(np.linalg.inv(Rib), n_des)
+        #h = np.matmul(np.linalg.inv(Rib), n_des)
+        h = np.linalg.lstsq(Rib, n_des)[0].flatten()
 
         h1, h2, h3 = h[0], h[1], h[2]
 
@@ -74,17 +77,34 @@ class PseudoControllAttINDI:
         return nu, dY, Y
 
 if __name__ == '__main__':
-    pc = PseudoControllAttINDI(1, 1, 9.81, 0.1, 0.1, 0.1, 0.1, 0.1)
+    params = Parameters()#'../params/quad_parameters.json', '../params/control_parameters.json')
+    pc = PseudoControllAttINDI(params)
+    from ftc.state import State
+    state = State()
+    state.update({
+        'position': np.array([0.0019, -0.0030, -0.0013]),
+        'quaternion': None,
+        'linear_vel': np.array([-0.0047, -0.0008, -0.0048]),
+        'angular_vel': np.array([-0.2015, -0.2467, -0.0825]),
+        'rotation_matrix': None,
+        'euler': np.array([0.41416e-03, -0.17189e-03, 0.2822e-03]),
+        'lin_acc': None,
+        'w_speeds': None
+    })
+
+    state.update_fail_id(2)
+    n_des = np.array([0.0004, 0.0011, -1.0]).reshape(-1, 1)
+    _lambda = np.array([0.3821, 0.5, -0.5]).reshape(-1, 1)
+    nB = np.array([0, 0, -1]).reshape(-1, 1)
+    r_ref = - 0.0013
+    Z_ref = 0
+    Vz_ref = 0
+
+    nu, dY, Y = pc(state, n_des, _lambda, nB, r_ref, Z_ref, Vz_ref)
     
-    response = pc(
-        np.array([0, 0,0.8 ]),
-        np.array([1, 0.1, 8 ]),
-        np.array([0, 0, 1 ]),
-        np.array([-0.5, 0.8, 1.2 ]),
-        np.array([1, 1.5, 0.8 ]),
-        np.array([1, 1, 1 ]),
-    )
-    
-    print(response)
+    #expected
+    #nu = np.array([0.0206, -21.5172, -1.5166, 0.4058]).reshape(-1, 1)
+    # dY = np.array([0.7126, 0.0508]).reshape(-1, 1)
+    # Y = np.array([0.6914e-03, -0.0327e-03]).reshape(-1, 1)
         
 
