@@ -32,8 +32,8 @@ max_path_length = 1000
 state = State()
 state.update_fail_id(parameters.fail_id)
 inputs = Inputs()
-inputs.updatePositionTarget([0, 0, -6])
-inputs.update_yawTarget(20)
+inputs.updatePositionTarget([0, 0, -1])
+inputs.update_yawTarget(-20)
 
 obs = env.reset()
 state.update(env.last_observation)
@@ -41,6 +41,10 @@ cum_reward = 0
 import pdb; pdb.set_trace()
 for i in range(max_path_length):
     control_signal = controller(state, inputs)
+    tmp = control_signal[3]
+    control_signal[3] = control_signal[1]
+    control_signal[1] = tmp
+
     obs, reward, done, info,  = env.step(control_signal)
     if done:
         env.reset()
