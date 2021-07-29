@@ -1,6 +1,6 @@
 {
-    "freq": 500,
-    "fail_id": [2],
+    "freq": 100,
+    "fail_id": 1,
     "DRF_enable": 0,
     "fail_time": 0.0,
     "k0": 1.9e-6,

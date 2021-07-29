@@ -6,7 +6,7 @@ from ftc.controller import INDIController
 from wrapper import QuadrotorEnvRos, state_space 
 
 target_pos = np.array([0, 0, 6.0], dtype=np.float32)
-crippled_degree = np.array([1.0, 1.0, 0.0, 1.0], dtype=np.float32)
+crippled_degree = np.array([1.0, 0.0, 1.0, 1.0], dtype=np.float32)
 state_space = ['rotation_matrix', 'euler', 'position', 'linear_vel', 'angular_vel']
 
 args_init_distribution = {
@@ -30,7 +30,7 @@ controller = INDIController(parameters=parameters, T_sampling=Ts)
 
 max_path_length = 1000
 state = State()
-state.update_fail_id(1)
+state.update_fail_id(parameters.fail_id)
 inputs = Inputs()
 inputs.updatePositionTarget([0, 0, -6])
 inputs.update_yawTarget(20)

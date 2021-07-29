@@ -12,7 +12,7 @@ class AllocationAttINDI:
         self.chi = parameters.chi/57.3
         self.mass = parameters.mass
         self.k = parameters.k0
-        self.t = parameters.t0
+        self.t = parameters.t0 * self.k
         self.beta = np.arctan(parameters.b/self.l)
         self.double_rotor = True
         self.DRF_enable = parameters.DRF_enable
