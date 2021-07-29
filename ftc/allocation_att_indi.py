@@ -73,7 +73,7 @@ class AllocationAttINDI:
                 G[2:, :] = np.zeros_like(G[2:, :])
                 nu[2:, :] = np.zeros((2, 1)) 
             else:
-                G[:fail_id] = np.zeros((4, 1))
+                G[:,fail_id] = np.zeros((4, ))
                 ddy0[3,:] = 0  #assuming vector nx1
                 G[3, :] = np.zeros_like(G[3, :])
                 nu[3,:] = 0#assuming vector nx1
