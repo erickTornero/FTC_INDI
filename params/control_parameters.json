@@ -7,15 +7,15 @@
     "pos_z_p_gain": 5,
     "pos_z_d_gain": 3,
     "axis_tilt": 0.0,
-    "att_p_gain": 200,
+    "att_p_gain": 20,
     "att_d_gain": 30,
     "t_indi": 0.02,
     "YRC_Kp_r": 5.0,
     "YRC_Kp_psi": 5.0,
     "position_maxAngle": 30,
-    "position_Kp_pos": [5, 5, 5],
+    "position_Kp_pos": [-5, -5, 5],
     "position_maxVel": 10,
     "position_intLim": 5.0,
-    "position_Ki_vel": [1.0, 1.0, 1.0],
-    "position_Kp_vel": [25.0, 25.0, 25.0]
+    "position_Ki_vel": [0.0, 0.0, 10.0],
+    "position_Kp_vel": [-1, -1.0, 10.0]
 }

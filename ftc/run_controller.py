@@ -6,14 +6,14 @@ from ftc.controller import INDIController
 from wrapper import QuadrotorEnvRos, state_space 
 
 target_pos = np.array([0, 0, 6.0], dtype=np.float32)
-crippled_degree = np.array([1.0, 0.0, 1.0, 1.0], dtype=np.float32)
+crippled_degree = np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
 state_space = ['rotation_matrix', 'euler', 'position', 'linear_vel', 'angular_vel']
 
 args_init_distribution = {
         'max_radius': 10,
         'max_ang_speed': 30,
         'max_radius_init': 0,
-        'angle_rad_std': 0.6,
+        'angle_rad_std': 0.1,
         'angular_speed_mean': 0,
         'angular_speed_std': 0.1,
 }
@@ -23,6 +23,7 @@ control_parms_path = 'params/control_parameters.json'
 parameters = Parameters(quadrotor_parms_path, control_parms_path)
 rate = parameters.freq
 Ts = 1/rate
+crippled_degree[parameters.fail_id] = 0.0
 
 env = QuadrotorEnvRos(np.zeros(3, dtype=np.float32), crippled_degree, state_space, rate, **args_init_distribution)
 
@@ -33,7 +34,7 @@ state = State()
 state.update_fail_id(parameters.fail_id)
 inputs = Inputs()
 inputs.updatePositionTarget([0, 0, -2])
-inputs.update_yawTarget(-30)
+inputs.update_yawTarget(0)
 
 obs = env.reset()
 state.update(env.last_observation)

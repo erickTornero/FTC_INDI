@@ -55,7 +55,7 @@ class PseudoControllAttINDI:
 
         dY = np.array([
             [-h3 * q + h2 * r + lambda_[0]],
-            [h3 * p + h1 * r + lambda_[1]]
+            [h3 * p - h1 * r + lambda_[1]]
         ])
 
         local_mat = np.array([
