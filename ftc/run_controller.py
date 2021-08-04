@@ -10,30 +10,30 @@ crippled_degree = np.array([1.0, 0.0, 1.0, 1.0], dtype=np.float32)
 state_space = ['rotation_matrix', 'euler', 'position', 'linear_vel', 'angular_vel']
 
 args_init_distribution = {
-        'max_radius': 8.2,
+        'max_radius': 10,
         'max_ang_speed': 30,
         'max_radius_init': 0,
         'angle_rad_std': 0.6,
         'angular_speed_mean': 0,
-        'angular_speed_std': 1.0,
+        'angular_speed_std': 0.1,
 }
-rate = 100
-Ts = 1/rate
-
-env = QuadrotorEnvRos(np.zeros(3, dtype=np.float32), crippled_degree, state_space, rate, **args_init_distribution)
 
 quadrotor_parms_path = 'params/quad_parameters.json'
 control_parms_path = 'params/control_parameters.json'
 parameters = Parameters(quadrotor_parms_path, control_parms_path)
+rate = parameters.freq
+Ts = 1/rate
+
+env = QuadrotorEnvRos(np.zeros(3, dtype=np.float32), crippled_degree, state_space, rate, **args_init_distribution)
 
 controller = INDIController(parameters=parameters, T_sampling=Ts)
 
-max_path_length = 1000
+max_path_length = 5000
 state = State()
 state.update_fail_id(parameters.fail_id)
 inputs = Inputs()
-inputs.updatePositionTarget([0, 0, -1])
-inputs.update_yawTarget(-20)
+inputs.updatePositionTarget([0, 0, -2])
+inputs.update_yawTarget(-30)
 
 obs = env.reset()
 state.update(env.last_observation)

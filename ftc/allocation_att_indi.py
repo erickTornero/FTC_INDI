@@ -89,8 +89,8 @@ class AllocationAttINDI:
 
         Y = (nu - ddy0)
         U = U0 + dU
-        if fail_flag > 0:
-            U[fail_id] = 0.0
+        #if fail_flag > 0:
+        #    U[fail_id] = 0.0
         return U, Y, dU
     
     def _check_nan(self, v: np.ndarray):
