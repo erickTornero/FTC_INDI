@@ -46,7 +46,7 @@ class AllocationAttINDI:
         Gr = np.array([self.t, -self.t, self.t, -self.t]) / self.iz
         
         G0 = np.array([
-            -self.k/self.mass * cos(theta) * cos(phi) * np.ones(4), 
+            -(self.k/self.mass) * cos(theta) * cos(phi) * np.ones(4), 
             -h3 * Gq + h2 * Gr,
             h3 * Gp - h1 * Gr,
             Gr
@@ -73,6 +73,7 @@ class AllocationAttINDI:
                 G[2:, :] = np.zeros_like(G[2:, :])
                 nu[2:, :] = np.zeros((2, 1)) 
             else:
+                #pass
                 G[:,fail_id] = np.zeros((4, ))
                 ddy0[3,:] = 0  #assuming vector nx1
                 G[3, :] = np.zeros_like(G[3, :])

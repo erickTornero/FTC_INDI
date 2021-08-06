@@ -29,7 +29,7 @@ env = QuadrotorEnvRos(np.zeros(3, dtype=np.float32), crippled_degree, state_spac
 
 controller = INDIController(parameters=parameters, T_sampling=Ts)
 
-max_path_length = 5000
+max_path_length = 50000
 state = State()
 state.update_fail_id(parameters.fail_id)
 inputs = Inputs()
@@ -42,10 +42,15 @@ cum_reward = 0
 import pdb; pdb.set_trace()
 for i in range(max_path_length):
     control_signal = controller(state, inputs)
+    #print("[{:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(*list(control_signal)))
+    #print("signal rotor 4 --> {:.1f}".format(control_signal[-1]))
     tmp = control_signal[3]
     control_signal[3] = control_signal[1]
     control_signal[1] = tmp
 
+    #control_signal[3] = min(control_signal[3], 100)
+    print("[{:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(*list(control_signal)))
+    #print("signal rotor 4 --> {:.1f}".format(control_signal[-1]))
     obs, reward, done, info,  = env.step(control_signal)
     if done:
         env.reset()
