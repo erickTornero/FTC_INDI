@@ -7,7 +7,7 @@ class AllocationAttINDI:
         self.ix = parameters.Ix
         self.iy = parameters.Iy
         self.iz = parameters.Iz
-        self.b = np.sqrt(parameters.b**2 + parameters.l**2)
+        self.b = np.sqrt(parameters.b**2 + parameters.l**2)/2
         self.l = parameters.l
         self.chi = parameters.chi/57.3
         self.mass = parameters.mass

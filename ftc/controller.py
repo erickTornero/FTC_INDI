@@ -81,7 +81,7 @@ class INDIController:
     def _getnB(self, fail_id):
         """inner loop, get nB"""
         a = self.parameters.axis_tilt
-        if self.parameters.DRF_enable == 0 or self.parameters.DRF_enable == 1:
+        if self.parameters.DRF_enable == 0:# or self.parameters.DRF_enable == 1:
             if fail_id == 0:
                 n = [-a, a, -1]
             elif fail_id == 1:
@@ -102,7 +102,7 @@ class INDIController:
     def init_filters(self, t):
         self.low_pass_dY.start(0, t)
         self.low_pass_ndes.start(0, t)
-        self.low_pass_zTarg.start(-6, t) # TODO: hardcoded
+        self.low_pass_zTarg.start(-2, t) # TODO: hardcoded
     
 
 

@@ -2,8 +2,8 @@
     "freq": 500,
     "fail_id": 1,
     "DRF_enable": 0,
-    "fail_time": 0.0,
-    "chi": 120,
+    "fail_time": 0.1,
+    "chi": 110,
     "pos_z_p_gain": 5,
     "pos_z_d_gain": 5,
     "axis_tilt": 0.0,
@@ -13,9 +13,9 @@
     "YRC_Kp_r": 5.0,
     "YRC_Kp_psi": 5.0,
     "position_maxAngle": 30,
-    "position_Kp_pos": [80, 80, 1],
+    "position_Kp_pos": [0.1e1, 0.1e1, 1],
     "position_maxVel": 20,
-    "position_intLim": 500.0,
-    "position_Ki_vel": [0, 0, 10.0],
-    "position_Kp_vel": [0.05, 0.05, 2.0]
+    "position_intLim": 50.0,
+    "position_Ki_vel": [1e-1, 1e-1, 10.0],
+    "position_Kp_vel": [20, 20, 20.0]
 }
