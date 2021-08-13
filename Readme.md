@@ -9,6 +9,7 @@ S. Sun, X. Wang, Q. Chu and C. d. Visser.
 # Requirements
 
 - ros melodic
+- [rotors_simulator package](https://github.com/ethz-asl/rotors_simulator)
 - python3
 
 # Installation
