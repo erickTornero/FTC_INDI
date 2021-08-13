@@ -3,7 +3,7 @@ from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
 from ftc.lqr.controller import LQRController
 from ftc.lqr.parameters import Parameters
-from wrapper import QuadrotorEnvRos, state_space 
+from wrapper import QuadrotorEnvRos, state_space
 
 crippled_degree = np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
 state_space = ['rotation_matrix', 'euler', 'position', 'linear_vel', 'angular_vel']
@@ -42,9 +42,23 @@ state.update(env.last_observation)
 for i in range(max_path_length):
     control_signal = controller(state)
     
-    obs, reward, done, info  = env.step(control_signal)
+    obs, reward, done, info  = env.step(control_signal) # make an step in the environment
+    state.update(env.last_observation) #map states to State class
+    cum_reward += reward
     if done:
         env.reset()
         break
-    state.update(env.last_observation)
-    cum_reward += reward
+
+
+"""
+    state = State() to get the current state at each time-step.
+    check the file ftc/utils/state.py to get a notion how to use it
+
+    inputs = Inputs(), use it to pass targets to the control algorithm
+    check the file ftc/utils/inputs.py to get a notion how to use it
+
+    files you probably will need to modify
+    - params/control_params_lqr.json, put here all the parameters of your LQR controller
+    - ftc/lqr/parameters.py, map here the values of the previous json to ease coding
+    - ftc/lqr/controller.py, put here the core of your LQR, the object must return the control signal in a forward pass, check __call__ function
+"""

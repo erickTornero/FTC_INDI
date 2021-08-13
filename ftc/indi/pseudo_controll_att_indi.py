@@ -79,7 +79,7 @@ class PseudoControllAttINDI:
 if __name__ == '__main__':
     params = Parameters()#'../params/quad_parameters.json', '../params/control_parameters.json')
     pc = PseudoControllAttINDI(params)
-    from ftc.state import State
+    from ftc.utils.state import State
     state = State()
     state.update({
         'position': np.array([0.0019, -0.0030, -0.0013]),

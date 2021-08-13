@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="ftc-indi",
+    name="ftc",
     version="0.0.1",
     author="Erick Tornero",
     author_email="erickdeivy01@gmail.com",

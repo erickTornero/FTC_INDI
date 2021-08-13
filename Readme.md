@@ -11,6 +11,14 @@ S. Sun, X. Wang, Q. Chu and C. d. Visser.
 - ros melodic
 - python3
 
+# Installation
+- git clone https://github.com/erickTornero/FTC_INDI.git
+- create an environment with python3 >= 3.6
+- ```bash
+    pip install -e .
+```
+
+
 
 # Fault Tolerant Controller using LQR
 
@@ -22,6 +30,6 @@ S. Sun, X. Wang, Q. Chu and C. d. Visser.
 
 ### Run LQR FTC Controller
 ```bash
-    python lqr_ftc/run_controller.py
+    python scripts/run_LQRcontroller.py
 ```
 
