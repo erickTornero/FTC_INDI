@@ -15,13 +15,12 @@ S. Sun, X. Wang, Q. Chu and C. d. Visser.
 # Installation
 - git clone https://github.com/erickTornero/FTC_INDI.git
 - create an environment with python3 >= 3.6
-- ```bash
+```bash
     pip install -e .
 ```
 
 
-
-# Fault Tolerant Controller using LQR
+## Fault Tolerant Controller using LQR
 
 ### Launch ROS Environment
 
