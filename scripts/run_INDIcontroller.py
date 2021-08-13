@@ -1,8 +1,8 @@
 import numpy as np
-from ftc.state import State
-from ftc.inputs import Inputs
-from ftc.parameters import Parameters
-from ftc.controller import INDIController
+from ftc.utils.state import State
+from ftc.utils.inputs import Inputs
+from ftc.indi.parameters import Parameters
+from ftc.indi.controller import INDIController
 from wrapper import QuadrotorEnvRos, state_space 
 
 target_pos = np.array([0, 0, 6.0], dtype=np.float32)
@@ -13,13 +13,13 @@ args_init_distribution = {
         'max_radius': 10,
         'max_ang_speed': 30,
         'max_radius_init': 0,
-        'angle_rad_std': 0.6,
+        'angle_rad_std': 0.0,
         'angular_speed_mean': 0,
-        'angular_speed_std': 6,
+        'angular_speed_std': 0.0,
 }
 
 quadrotor_parms_path = 'params/quad_parameters.json'
-control_parms_path = 'params/control_parameters.json'
+control_parms_path = 'params/control_parameters_indi.json'
 parameters = Parameters(quadrotor_parms_path, control_parms_path)
 rate = parameters.freq
 Ts = 1/rate
@@ -31,7 +31,7 @@ env = QuadrotorEnvRos(np.zeros(3, dtype=np.float32), crippled_degree, state_spac
 controller = INDIController(parameters=parameters, T_sampling=Ts)
 
 max_path_length = 50000
-state = State()
+state = State(invert_axis=True)
 state.update_fail_id(parameters.fail_id)
 inputs = Inputs()
 inputs.updatePositionTarget([0, 0, -2])
@@ -44,6 +44,7 @@ import pdb; pdb.set_trace()
 #for _ in range(10):
 #    obs, _, _, _, = env.step(np.array([100, 0, 100, 0]))
 #    state.update(env.last_observation)
+controller.init_controller(state, inputs, 0)
 for i in range(max_path_length):
     if i == 5000:
         print('setposition')

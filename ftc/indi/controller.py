@@ -1,9 +1,11 @@
+from ftc import indi
 import time
 import numpy as np
-from ftc.functions import URPositionControl, URYawControl
-from ftc import PseudoControllAttINDI, AllocationAttINDI 
-from ftc.filters import LowpassFilter
-from ftc.parameters import Parameters
+from ftc.indi.functions import URPositionControl, URYawControl
+from ftc.indi.allocation_att_indi import AllocationAttINDI 
+from ftc.indi.pseudo_controll_att_indi import PseudoControllAttINDI
+from ftc.utils.filters import LowpassFilter
+from ftc.indi.parameters import Parameters
 from math import sin, cos
 
 class INDIController:
@@ -32,7 +34,7 @@ class INDIController:
 
         start_time = time.time()
         self.init_filters(start_time)
-        self.derivator_z.start(-6, start_time) #TODO: hardcoded
+        #self.derivator_z.start(-6, start_time) #TODO: hardcoded
 
     def __call__(self, state, inputs):
         n_des, r_cmd = self.outer_controller(state, inputs)
@@ -99,6 +101,26 @@ class INDIController:
 
         return n
 
+    def init_controller(self, states, inputs, t):
+        self.subsystem.init_subsystem(t)
+        # filters
+        self.low_pass_zTarg.start(inputs.zTarget, t)
+        #self.low_pass_ndes.start(np.array([0, 0, -1]).reshape(-1,1), t)
+
+        # derivators
+        
+        self.derivator_z.start(states.position[2])
+        self.derivator_dY.start(0, t)
+        n_des, _ = self.outer_controller(states, inputs)
+        self.low_pass_ndes.start(n_des, t)
+        self.derivator_ndes.start(n_des, t)
+        #ssres = self.subsystem(states, n_des)
+        
+        #h0, posdd, U0, U1 = ssres['h0'], ssres['posdd'], ssres['U0'], ssres['U1']
+        
+
+
+
     def init_filters(self, t):
         self.low_pass_dY.start(0, t)
         self.low_pass_ndes.start(0, t)
@@ -114,7 +136,7 @@ class Subsystem:
         self.lowpass_U0 = LowpassFilter(1, parameters.t_indi, T_sampling)
         self.lowpass_U1 = LowpassFilter(1, parameters.t_indi, T_sampling)
 
-        self.init_filters(time.time())
+        #self.init_filters(time.time())
 
     def __call__(self, states, n_des, Tc):
         h = self._Hestimator(n_des, states.att)
@@ -137,6 +159,9 @@ class Subsystem:
         self.lowpass_az.start(0, t)
         self.lowpass_U0.start(0, t)
         self.lowpass_U1.start(0, t)
+
+    def init_subsystem(self, t):
+        self.init_filters(t)
 
     def _Hestimator(self, n_des, att):
         phi = att[0]

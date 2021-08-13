@@ -10,12 +10,12 @@
     "att_p_gain": 30,
     "att_d_gain": 20,
     "t_indi": 0.01,
-    "YRC_Kp_r": 5.0,
-    "YRC_Kp_psi": 5.0,
+    "YRC_Kp_r": 10.0,
+    "YRC_Kp_psi": 10.0,
     "position_maxAngle": 30,
     "position_Kp_pos": [0.1e1, 0.1e1, 1],
-    "position_maxVel": 20,
-    "position_intLim": 50.0,
-    "position_Ki_vel": [1e-1, 1e-1, 10.0],
+    "position_maxVel": 10,
+    "position_intLim": 5.0,
+    "position_Ki_vel": [1e-1, 1e-1, 50.0],
     "position_Kp_vel": [20, 20, 20.0]
 }

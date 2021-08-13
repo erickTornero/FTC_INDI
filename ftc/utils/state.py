@@ -1,5 +1,5 @@
 class State:
-    def __init__(self):
+    def __init__(self, invert_axis=False):
         self.position = None
         self.quaternion = None
         self.linear_vel = None
@@ -9,6 +9,7 @@ class State:
         self.zTarget = None
         self.fail_id = None
         self.acc = None
+        self._invert_axis = invert_axis
 
     def update(self, observation):
         self.position = self.invert(observation['position'])
@@ -34,10 +35,14 @@ class State:
     """
 
     def invert(self, a):
-        if type(a)==tuple:
-            a = list(a)
-        a[2] = -a[2]
-        a[1] = -a[1]
+        """
+            Use just if you want to change the axis signs, this is a trick, make possible to no use it.
+        """
+        if self._invert_axis:
+            if type(a)==tuple:
+                a = list(a)
+            a[2] = -a[2]
+            a[1] = -a[1]
         return a
         
 
@@ -47,6 +52,7 @@ class State:
 
     @property
     def omegaf(self):
+        #get anular speeds
         return self.angular_vel
 
     @property
@@ -56,4 +62,3 @@ class State:
     @property
     def vel(self):
         return self.linear_vel
-

@@ -1,7 +1,7 @@
 import numpy as np
 from math import sin, cos
 from scipy.linalg import block_diag
-from ftc.parameters import Parameters
+from ftc.indi.parameters import Parameters
 class AllocationAttINDI:
     def __init__(self, parameters: Parameters):
         self.ix = parameters.Ix
@@ -166,7 +166,7 @@ class AllocationAttINDI:
 if __name__ == '__main__':
     params = Parameters()
     ac = AllocationAttINDI(params)
-    from ftc.state import State
+    from ftc.utils.state import State
     state = State()
     state.update({
         'position': None,

@@ -3,7 +3,7 @@
 """
 import numpy as np
 from math import sin, cos
-from ftc.parameters import Parameters
+from ftc.indi.parameters import Parameters
 
 class PseudoControllAttINDI:
     def __init__(self, parameters: Parameters):
