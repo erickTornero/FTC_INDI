@@ -1,6 +1,9 @@
+import os
+import joblib
 import numpy as np
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
+from ftc.utils.gen_trajectories import Trajectory
 from ftc.indi.parameters import Parameters
 from ftc.indi.controller import INDIController
 from wrapper import QuadrotorEnvRos, state_space 
@@ -30,7 +33,7 @@ env = QuadrotorEnvRos(np.zeros(3, dtype=np.float32), crippled_degree, state_spac
 
 controller = INDIController(parameters=parameters, T_sampling=Ts)
 
-max_path_length = 50000
+max_path_length = 10000
 state = State(invert_axis=True)
 state.update_fail_id(parameters.fail_id)
 inputs = Inputs()
@@ -41,15 +44,21 @@ obs = env.reset()
 state.update(env.last_observation)
 cum_reward = 0
 import pdb; pdb.set_trace()
-#for _ in range(10):
-#    obs, _, _, _, = env.step(np.array([100, 0, 100, 0]))
+
+trajectory_manager = Trajectory(max_path_length, -2)
+trajectory = trajectory_manager.gen_points('circle', 2)
+#for _ in range(2):
+#    obs, _, _, _, = env.step(np.array([400, 0, 400, 0]))
 #    state.update(env.last_observation)
 controller.init_controller(state, inputs, 0)
+observations = []
+actions = []
 for i in range(max_path_length):
-    if i == 5000:
-        print('setposition')
-        import pdb; pdb.set_trace()
-        inputs.updatePositionTarget([0, 1, -2])
+    inputs.updatePositionTarget(trajectory[i])
+    ##if i == 5000:
+    ##    print('setposition')
+    ##    import pdb; pdb.set_trace()
+    ##    inputs.updatePositionTarget([0, 1, -2])
     control_signal = controller(state, inputs)
     #print("[{:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(*list(control_signal)))
     #print("signal rotor 4 --> {:.1f}".format(control_signal[-1]))
@@ -64,5 +73,16 @@ for i in range(max_path_length):
     if done:
         env.reset()
         break
+    observations.append(obs)
+    actions.append(control_signal)
     state.update(env.last_observation)
     cum_reward += reward
+
+paths = {
+    'observations': np.vstack(observations),
+    'actions': np.vstack(actions),
+    'trajectory': trajectory,
+    'info': parameters
+}
+save_paths = './data'
+joblib.dump(paths, os.path.join(save_paths, 'paths6.pkl'))
