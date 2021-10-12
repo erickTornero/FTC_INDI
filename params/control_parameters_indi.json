@@ -6,16 +6,16 @@
     "chi": 140,
     "pos_z_p_gain": 25,
     "pos_z_d_gain": 25,
-    "axis_tilt": 0.0,
-    "att_p_gain": 30,
-    "att_d_gain": 20,
+    "axis_tilt": 0.1,
+    "att_p_gain": 60,
+    "att_d_gain": 40,
     "t_indi": 0.01,
     "YRC_Kp_r": 10.0,
     "YRC_Kp_psi": 10.0,
     "position_maxAngle": 30,
     "position_Kp_pos": [0.1e2, 0.1e2, 10],
-    "position_maxVel": 10,
+    "position_maxVel": 30,
     "position_intLim": 2.0,
-    "position_Ki_vel": [1, 1, 50.0],
-    "position_Kp_vel": [20, 20, 20.0]
+    "position_Ki_vel": [10, 10, 50.0],
+    "position_Kp_vel": [30, 30, 20.0]
 }

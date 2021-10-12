@@ -45,8 +45,8 @@ state.update(env.last_observation)
 cum_reward = 0
 import pdb; pdb.set_trace()
 
-trajectory_manager = Trajectory(max_path_length, -2)
-trajectory = trajectory_manager.gen_points('circle', 2)
+trajectory_manager = Trajectory(max_path_length, -3)
+trajectory = trajectory_manager.gen_points('helicoid', 2)
 #for _ in range(2):
 #    obs, _, _, _, = env.step(np.array([400, 0, 400, 0]))
 #    state.update(env.last_observation)
@@ -85,4 +85,4 @@ paths = {
     'info': parameters
 }
 save_paths = './data'
-joblib.dump(paths, os.path.join(save_paths, 'paths6.pkl'))
+joblib.dump(paths, os.path.join(save_paths, 'paths9.pkl'))

@@ -1,6 +1,6 @@
 import joblib
 import matplotlib.pyplot as plt
-data = joblib.load('data/paths6.pkl')
+data = joblib.load('data/paths9.pkl')
 
 position = data['observations'][:,12:15]
 target = data['trajectory']
