@@ -67,7 +67,7 @@ for i in range(max_path_length):
     control_signal[1] = tmp
 
     #control_signal[3] = min(control_signal[3], 100)
-    print("[{:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(*list(control_signal)))
+    #print("[{:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(*list(control_signal)))
     #print("signal rotor 4 --> {:.1f}".format(control_signal[-1]))
     obs, reward, done, info  = env.step(control_signal)
     if done:
