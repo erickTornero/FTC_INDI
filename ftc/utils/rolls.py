@@ -12,7 +12,7 @@ def rollouts(
     env,
     controller: INDIController,
     n_rolls=20,
-    max_path_length=250,
+    max_path_length=5000,
     save_paths=None,
     traj=None,
     initial_states=dict(pos=None,ang=None),
@@ -22,9 +22,8 @@ def rollouts(
 ):
     """ Generate rollouts for testing & Save paths if it is necessary"""
     paths           =   []
-    use_sequence    =   True
-
     allow_inject    =   inject_failure['allow']
+    push_failure_at = None
     if allow_inject: 
         if inject_failure['type']=='ornstein':
             orstein         =  1#OrnsteinUhlenbeck(**inject_failure['ornstein_uhlenbeck'])
@@ -56,8 +55,6 @@ def rollouts(
         targetposition  =   traj[0]
         
         next_target_pos =   targetposition
-
-        env.set_targetpos(targetposition)
         init_pos    =   initial_states['pos']
         init_ang    =   initial_states['ang']
         #obs = env.reset(init_pos, init_ang)
@@ -67,14 +64,22 @@ def rollouts(
             env.set_task(np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32))
             env.set_reward_function('type1')
         obs     = env.reset()
-        task    =   env.get_current_task()[1]
-        mpc.restart_mpc(crippled_factor=task)
+        #task    =   env.get_current_task()[1]
+        #mpc.restart_mpc(crippled_factor=task)
 
         done = False
         timestep    =   0
         cum_reward  =   0.0
 
         running_paths=dict(observations=[], actions=[], rewards=[], dones=[], next_obs=[], target=[])
+
+        state = State(invert_axis=True)
+        state.update(env.last_observation)
+        state.update_fail_id(2)
+        inputs = Inputs()
+        inputs.updatePositionTarget(traj[timestep])
+        inputs.update_yawTarget(0)
+        controller.init_controller(state, inputs, 0)
 
         while not done and timestep < max_path_length:
             
@@ -91,29 +96,27 @@ def rollouts(
                         env.set_task(np.array([1.0, push_new_task, 1.0, 1.0], dtype=np.float32))
                     if timestep == (push_failure_at + 4):
                         print('Switch architecture')
-                        horizon     =   20
-                        mpc.restart_mpc(0.0)
-                        env.set_reward_function('type2')
+                        # TODO: Switch controller
+                        #horizon     =   20
+                        #mpc.restart_mpc(0.0)
+                        #env.set_reward_function('type2')
 
             next_target_pos =   traj[timestep + 1]
-            if use_sequence:
-                horizon_sequence    =   traj[timestep+1:timestep+1+horizon]
-                if horizon_sequence.shape[0] < horizon:
-                    horizon_sequence    =   np.concatenate((horizon_sequence, np.repeat(horizon_sequence[-1].reshape(1, -1), horizon-horizon_sequence.shape[0], axis=0)), axis=0)
-            else:
-                horizon_sequence    =   None
-                
-            env.set_targetpos(next_target_pos)
+            inputs.updatePositionTarget(next_target_pos)
 
             #action = mpc.get_action_PDDM(stack_as, 0.6, 5)
-            action = controller()
+            action = controller(state, inputs)
+            # Fix order of control signal
+            tmp = action[3]
+            action[3] = action[1]
+            action[1] = tmp
 
             next_obs, reward, done, env_info =   env.step(action)
 
             if runn_all_steps: done=False
 
             #if save_paths is not None:
-            observation, action = stack_as.get()
+            observation = obs
             running_paths['observations'].append(observation.flatten())
             running_paths['actions'].append(action.flatten())
             running_paths['rewards'].append(reward)
@@ -133,6 +136,7 @@ def rollouts(
             # endif
             
             targetposition  =   next_target_pos
+            state.update(env.last_observation)
             # Test stacked
 
             cum_reward  +=  reward
