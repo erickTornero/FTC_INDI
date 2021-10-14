@@ -195,7 +195,7 @@ class WrapperROSQuad(BaseWrapperROS):
         _position          =   np.array([_position.x, _position.y, _position.z], dtype=np.float32)
         _quaternion        =   np.array([_quaternion.x, _quaternion.y, _quaternion.z, _quaternion.w], dtype=np.float32)
         # relative_position
-        _position          =   _position - targetpos
+        _position          =   _position# - targetpos
 
         _linvel            =   twist.linear
         _angvel            =   twist.angular

@@ -40,9 +40,10 @@ class Trajectory:
         
         elif wave  ==  'helicoid':
             """ Elicoid trajectory, two rounds"""
+            sign = 1#self.z_bias/abs(self.z_bias) if self.z_bias != 0 else 1
             x   =   np.cos(2*np.pi*t*self.dt*nrounds)
             y   =   np.sin(2*np.pi*t*self.dt*nrounds)
-            z   =   nrounds * (t/self.npoints) + self.z_bias
+            z   =   nrounds * (t/self.npoints) * sign + self.z_bias
             
         elif wave  ==  'stepped':
             """ An stepped Trajectory will be generated"""

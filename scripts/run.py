@@ -38,7 +38,7 @@ trajectory_manager = Trajectory(max_path_length, -3)
 trajectory = trajectory_manager.gen_points('helicoid', 2)
 
 inject_failure = {'allow': False}
-save_paths = './data/rollouts'
+save_paths = './data/rollouts3'
 logger  =   Logger(save_paths, 'logtest.txt')
 nrolls = 20
 rollouts(

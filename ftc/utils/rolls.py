@@ -63,6 +63,9 @@ def rollouts(
             print('Init without failures')
             env.set_task(np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32))
             env.set_reward_function('type1')
+        quadrotor_target = targetposition.copy()
+        quadrotor_target[1:] = -quadrotor_target[1:]
+        env.set_targetpos(quadrotor_target)
         obs     = env.reset()
         #task    =   env.get_current_task()[1]
         #mpc.restart_mpc(crippled_factor=task)
