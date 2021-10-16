@@ -113,7 +113,7 @@ class BaseWrapperROS(gym.Env):
     Starts definition of public methods
     """
 
-    def step(self, action):
+    def step(self, action, targetpos=None):
         """
         Execute the step process given an action
         @action: a numpy array of dimension (4, )
@@ -128,9 +128,9 @@ class BaseWrapperROS(gym.Env):
         
         self.gazebo.pauseSim()
         obs_dict    =   self._get_observation_state()
-        done        =   self._compute_done(obs_dict)
+        done        =   self._compute_done(obs_dict, targetpos)
         info        =   {}
-        reward      =   self._compute_rewards(obs_dict, action)
+        reward      =   self._compute_rewards(obs_dict, action, targetpos)
 
         obs =   self._flat_observation(obs_dict)
 

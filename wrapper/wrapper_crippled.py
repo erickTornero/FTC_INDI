@@ -19,14 +19,14 @@ class QuadrotorEnvRos(WrapperROSQuad):
         print('QuadrotorEnvRos class initialized \n{}'.format(self.info()))
 
     
-    def step(self, action):
+    def step(self, action, targetpos=None):
         """
         Overwrite step function, crip action
         """
         
         faulted_actions = self.mask * action
 
-        return super(QuadrotorEnvRos, self).step(faulted_actions)
+        return super(QuadrotorEnvRos, self).step(faulted_actions, targetpos)
         
 
     def info(self):

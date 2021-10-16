@@ -11,7 +11,7 @@ crippled_degree = np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
 state_space = ['rotation_matrix', 'euler', 'position', 'linear_vel', 'angular_vel']
 
 args_init_distribution = {
-        'max_radius': 10,
+        'max_radius': 4.2,
         'max_ang_speed': 30,
         'max_radius_init': 0,
         'angle_rad_std': 0.0,
@@ -38,7 +38,7 @@ trajectory_manager = Trajectory(max_path_length, -3)
 trajectory = trajectory_manager.gen_points('helicoid', 2)
 
 inject_failure = {'allow': False}
-save_paths = './data/rollouts3'
+save_paths = './data/rollouts5'
 logger  =   Logger(save_paths, 'logtest.txt')
 nrolls = 20
 rollouts(

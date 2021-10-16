@@ -7,6 +7,7 @@ import glob
 from ftc.indi import INDIController
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
+from ftc.utils.transforms import pos_invert_yz
 
 def rollouts( 
     env,
@@ -114,7 +115,7 @@ def rollouts(
             action[3] = action[1]
             action[1] = tmp
 
-            next_obs, reward, done, env_info =   env.step(action)
+            next_obs, reward, done, env_info =   env.step(action, pos_invert_yz(next_target_pos))
 
             if runn_all_steps: done=False
 

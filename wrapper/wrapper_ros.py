@@ -123,10 +123,10 @@ class WrapperROSQuad(BaseWrapperROS):
         return success
         # TODO: Validate
 
-    def _compute_done(self, states_dict):
+    def _compute_done(self, states_dict, targetpos=None):
         position    =   states_dict['position']
-
-        distance    =   np.sqrt((position * position).sum())
+        distance    =   (targetpos - position) if targetpos is not None else position
+        distance    =   np.sqrt((distance * distance).sum())
         # Add Early stop when angular velocity in x or y >= 10rad/s
         ang_vel     =   states_dict['angular_vel']
         ang_vel_es  =   np.abs(ang_vel[0]) >=self.max_ang_speed or np.abs(ang_vel[1]) >= self.max_ang_speed
@@ -135,9 +135,10 @@ class WrapperROSQuad(BaseWrapperROS):
 
         return distance > self.max_radius or ang_vel_es
 
-    def _compute_rewards(self, states_dict, action):
+    def _compute_rewards(self, states_dict, action, targetpos=None):
         position    =   states_dict['position']
-        distance    =   np.sqrt((position * position).sum())
+        distance    =   (targetpos - position) if targetpos is not None else position
+        distance    =   np.sqrt((distance * distance).sum())
 
         return 4.0 - 1.25 * distance
 
