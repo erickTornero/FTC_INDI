@@ -59,6 +59,7 @@ class Parameters:
             # Controller related Parameters
             # Controls
             parameters = self.load_params(quad_params_path, control_params_path)
+            self.params = parameters
             self.freq = parameters['freq'] # control frequency
 
             self.fail_id =  parameters['fail_id']
