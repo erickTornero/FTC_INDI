@@ -1,5 +1,4 @@
-from lib2to3.pytree import Base
-from ftc import indi
+from typing import Dict, Optional
 import time
 import numpy as np
 from ftc.indi.functions import URPositionControl, URYawControl
@@ -8,12 +7,14 @@ from ftc.indi.pseudo_controll_att_indi import PseudoControllAttINDI
 from ftc.utils.filters import LowpassFilter
 from ftc.indi.parameters import Parameters
 from math import sin, cos
+
+from wrapper.state_space import StateSpaceRobots
 from ..base_controller import BaseController
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
 
 class INDIController(BaseController):
-    def __init__(self, parameters:Parameters, T_sampling:float=None):
+    def __init__(self, parameters:Parameters, T_sampling:float=None, state_space: Optional[StateSpaceRobots]=None):
         self.T_sampling = T_sampling
         self.parameters = parameters
         self.errorInt = np.zeros(3, dtype=np.float32)
@@ -38,10 +39,15 @@ class INDIController(BaseController):
 
         start_time = time.time()
         self.init_filters(start_time)
+        self.state_space = state_space
         #self.derivator_z.start(-6, start_time) #TODO: hardcoded
 
-    def get_actions(self, obs: np.ndarray, targetpos: np.ndarray):
-        self._state.update()
+    def get_action(self, obs: np.ndarray, targetpos: np.ndarray, obs_dict: Optional[Dict[str, np.ndarray]]=None):
+        if obs_dict is not None:
+            self._state.update(obs_dict)
+        else:
+            self._state.update(self.state_space.get_obs_dict(obs))
+
         self._inputs.update_position_target(targetpos)
         return self.__call__(self._state, self._inputs)
 

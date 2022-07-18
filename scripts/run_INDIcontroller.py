@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     env = QuadrotorEnvRos(np.zeros(3, dtype=np.float32), crippled_degree, state_space, rate, **args_init_distribution)
 
-    controller = INDIController(parameters=parameters, T_sampling=Ts)
+    controller = INDIController(parameters=parameters, T_sampling=Ts, state_space=env.state_space)
 
     max_path_length = 10000
     state = State(invert_axis=True)
@@ -71,6 +71,8 @@ if __name__ == "__main__":
         ##    import pdb; pdb.set_trace()
         ##    inputs.update_position_target([0, 1, -2])
         control_signal = controller(state, inputs)
+        #control_signal = controller.get_action(obs, trajectory[i],)
+        #import pdb; pdb.set_trace()
         #print("[{:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(*list(control_signal)))
         #print("signal rotor 4 --> {:.1f}".format(control_signal[-1]))
         tmp = control_signal[3]

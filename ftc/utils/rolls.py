@@ -86,7 +86,7 @@ def rollouts(
         state.update(env.last_observation)
         if damaged_motor >= 0: state.update_fail_id(damaged_motor)
         inputs = Inputs()
-        inputs.updatePositionTarget(traj[timestep])
+        inputs.update_position_target(traj[timestep])
         inputs.update_yawTarget(0)
         controller.init_controller(state, inputs, 0)
 
@@ -111,7 +111,7 @@ def rollouts(
                         #env.set_reward_function('type2')
 
             next_target_pos =   traj[timestep + 1]
-            inputs.updatePositionTarget(next_target_pos)
+            inputs.update_position_target(next_target_pos)
 
             #action = mpc.get_action_PDDM(stack_as, 0.6, 5)
             action = controller(state, inputs)

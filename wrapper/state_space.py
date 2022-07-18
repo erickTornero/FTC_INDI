@@ -1,7 +1,11 @@
+from typing import Dict
+import numpy as np
+
 class StateSpaceRobots:
     def __init__(self, names):
-        self.names  =   names
         self._init_info_state_spaces()
+        self.names  =   names
+        self.indexes = self.get_state_space_indexes()
 
     
     def _init_info_state_spaces(self):
@@ -25,7 +29,7 @@ class StateSpaceRobots:
         return (shape, ) 
 
     
-    def get_state_space_indexes(self):
+    def get_state_space_indexes(self) -> Dict[str, Dict[str, int]]:
         indexes =   {}
         index   =   0
         for name in self.names:
@@ -39,3 +43,15 @@ class StateSpaceRobots:
                 raise Exception('Invalid name <{}> for state space'.format(name))
 
         return indexes
+
+    def get_from_vector(self, vector, start, end):
+        return vector[start:end]
+
+    def get_values(self, vector):
+        return (self.get_from_vector(vector, **self.indexes[name]) for name in self.names)
+
+    def get_attrib(self, vector: np.ndarray, attrib_name: str):
+        return self.get_from_vector(vector, **self.indexes[attrib_name])
+
+    def get_obs_dict(self, vector: np.ndarray):
+        return {attrib: self.get_attrib(vector, attrib) for attrib in self.names}
