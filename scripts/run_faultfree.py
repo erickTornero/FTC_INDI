@@ -2,12 +2,6 @@ import numpy as np
 from wrapper import QuadrotorEnvRos
 from ftc.ffree import HoverController#, HoverLQRff
 #def rollouts(env, controller, frequency, nrolls, max_path_length, save_paths, trajectory, initial_states, run_all_steps=False, logger=None, inject_failure=None):
-def get_from_vector(vector, start, end):
-    return vector[start:end]
-
-
-def get_values(vector, indexes, state_space_names):
-    return (get_from_vector(vector, **indexes[name]) for name in state_space_names)
 
 def get_actions_from_control(obs):
     return np.random.uniform(0, 838, 4)
@@ -28,11 +22,10 @@ initial_conditions_params = {
 flight_time =   12.5  # in seconds
 max_path_length =   int(flight_time * frequency)
 env =   QuadrotorEnvRos(target_pos, crippled_degree, state_space_names, frequency, **initial_conditions_params)
-hover_control   =   HoverController()#HoverLQRff()
+hover_control   =   HoverController(env.state_space)#HoverLQRff()
 
 
 def roll(env:QuadrotorEnvRos, controller: HoverController, max_path_length: int):    
-    indexes =   env.state_space.get_state_space_indexes()
     obs     =   env.reset()
     cumulative_reward   =   0
     #env.target_pos      =   np.array([0, 1, 2], dtype=np.float32)
@@ -40,7 +33,8 @@ def roll(env:QuadrotorEnvRos, controller: HoverController, max_path_length: int)
     for i in range(max_path_length):
         if i==0:
             continue
-        action  =   controller.compute_rotors_speeds_v2(*get_values(obs, indexes, state_space_names), target_pos)
+        action = controller.get_action(obs, target_pos)
+        #action  =   controller.compute_rotors_speeds_v2(*get_values(obs, indexes, state_space_names), target_pos)
         obs, reward, done, info = env.step(action)
         cumulative_reward += reward
         if done:

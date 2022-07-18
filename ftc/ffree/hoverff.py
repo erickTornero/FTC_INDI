@@ -1,8 +1,18 @@
 import numpy as np
+
+from wrapper.state_space import StateSpaceRobots
 from .pid import PID
 from .common import initialize_params
-class HoverController():
-    def __init__(self):
+from ..base_controller import BaseController
+
+def get_from_vector(vector, start, end):
+    return vector[start:end]
+
+def get_values(vector, indexes, state_space_names):
+    return (get_from_vector(vector, **indexes[name]) for name in state_space_names)
+
+class HoverController(BaseController):
+    def __init__(self, state_space: StateSpaceRobots):
         self.ixx        =   0.007
         self.iyy        =   0.007
         self.izz        =   0.012
@@ -37,6 +47,11 @@ class HoverController():
         self.allocation_matrix, self.normalized_attitude_gain, self.normalized_angular_rate_gain, self.angular_acc_to_rotor_velocities = initialize_params(
             self.rotors_configuration, self.inertia_matrix, self.attitude_gain, self.angular_rate_gain
         )
+        self.state_space_names = state_space.names 
+        self.indexes_obs = state_space.get_state_space_indexes()
+
+    def get_action(self, obs: np.ndarray, targetpos: np.ndarray) -> np.ndarray:
+        return self.compute_rotors_speeds_v2(*get_values(obs, self.indexes_obs, self.state_space_names), targetpos)
 
     def compute_rotors_speeds(self, rotmat, pos, euler, linear_vel, angular_vel):
         pos_error   =   self.target_p - pos

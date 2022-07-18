@@ -1,16 +1,19 @@
 from collections import deque
+from typing import Optional
 import numpy as np
 import joblib
 import os
 import glob
 #from mbrl.utils.ornstein import OrnsteinUhlenbeck
 from ftc.indi import INDIController
+from ftc.utils.logger import Logger
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
 from ftc.utils.transforms import pos_invert_yz
-
-def rollouts( 
-    env,
+from wrapper.wrapper_crippled import QuadrotorEnvRos
+from ftc.ffree import HoverController
+def rollouts(
+    env: QuadrotorEnvRos,
     controller: INDIController,
     n_rolls=20,
     max_path_length=5000,
@@ -18,7 +21,7 @@ def rollouts(
     traj=None,
     initial_states=dict(pos=None,ang=None),
     runn_all_steps=False,
-    logger=None,
+    logger: Optional[Logger]=None,
     inject_failure=None
 ):
     """ Generate rollouts for testing & Save paths if it is necessary"""
@@ -26,8 +29,9 @@ def rollouts(
     allow_inject    =   inject_failure['allow']
     push_failure_at =   None
     damaged_motor   =   -1 # -1 for non damaged
-    if allow_inject: 
+    if allow_inject:
         damaged_motor = inject_failure['damaged_motor_index']
+        ffree_controller    =   HoverController()
         if inject_failure['type']=='ornstein':
             orstein         =  1#OrnsteinUhlenbeck(**inject_failure['ornstein_uhlenbeck'])
             noise           =  orstein.get_ornstein_noise_length(max_path_length)
@@ -72,7 +76,6 @@ def rollouts(
         obs     = env.reset()
         #task    =   env.get_current_task()[1]
         #mpc.restart_mpc(crippled_factor=task)
-
         done = False
         timestep    =   0
         cum_reward  =   0.0
