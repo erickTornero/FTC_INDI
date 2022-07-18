@@ -24,8 +24,10 @@ def rollouts(
     """ Generate rollouts for testing & Save paths if it is necessary"""
     paths           =   []
     allow_inject    =   inject_failure['allow']
-    push_failure_at = None
+    push_failure_at =   None
+    damaged_motor   =   -1 # -1 for non damaged
     if allow_inject: 
+        damaged_motor = inject_failure['damaged_motor_index']
         if inject_failure['type']=='ornstein':
             orstein         =  1#OrnsteinUhlenbeck(**inject_failure['ornstein_uhlenbeck'])
             noise           =  orstein.get_ornstein_noise_length(max_path_length)
@@ -79,7 +81,7 @@ def rollouts(
 
         state = State(invert_axis=True)
         state.update(env.last_observation)
-        state.update_fail_id(2)
+        if damaged_motor >= 0: state.update_fail_id(damaged_motor)
         inputs = Inputs()
         inputs.updatePositionTarget(traj[timestep])
         inputs.update_yawTarget(0)

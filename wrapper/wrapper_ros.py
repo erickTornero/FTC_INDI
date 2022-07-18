@@ -137,7 +137,7 @@ class WrapperROSQuad(BaseWrapperROS):
 
     def _compute_rewards(self, states_dict, action, targetpos=None):
         position    =   states_dict['position']
-        distance    =   (targetpos - position) if targetpos is not None else position
+        distance    =   (targetpos - position) if targetpos is not None else (self.target_pos - position)
         distance    =   np.sqrt((distance * distance).sum())
 
         return 4.0 - 1.25 * distance

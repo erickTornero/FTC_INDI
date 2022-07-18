@@ -30,6 +30,6 @@ S. Sun, X. Wang, Q. Chu and C. d. Visser.
 
 ### Run LQR FTC Controller
 ```bash
-    python scripts/run_LQRcontroller.py
+    python scripts/run_INDIcontroller.py
 ```
 
