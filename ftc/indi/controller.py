@@ -1,3 +1,4 @@
+from lib2to3.pytree import Base
 from ftc import indi
 import time
 import numpy as np
@@ -7,8 +8,11 @@ from ftc.indi.pseudo_controll_att_indi import PseudoControllAttINDI
 from ftc.utils.filters import LowpassFilter
 from ftc.indi.parameters import Parameters
 from math import sin, cos
+from ..base_controller import BaseController
+from ftc.utils.state import State
+from ftc.utils.inputs import Inputs
 
-class INDIController:
+class INDIController(BaseController):
     def __init__(self, parameters:Parameters, T_sampling:float=None):
         self.T_sampling = T_sampling
         self.parameters = parameters
@@ -36,17 +40,22 @@ class INDIController:
         self.init_filters(start_time)
         #self.derivator_z.start(-6, start_time) #TODO: hardcoded
 
-    def __call__(self, state, inputs):
+    def get_actions(self, obs: np.ndarray, targetpos: np.ndarray):
+        self._state.update()
+        self._inputs.update_position_target(targetpos)
+        return self.__call__(self._state, self._inputs)
+
+    def __call__(self, state: State, inputs: Inputs):
         n_des, r_cmd = self.outer_controller(state, inputs)
         w_cmd = self.inner_controller(state, inputs, n_des, r_cmd)
         return w_cmd.flatten()
 
-    def outer_controller(self, state, inputs):
+    def outer_controller(self, state: State, inputs: Inputs):
         n_des, self.errorInt = URPositionControl(inputs, state, self.parameters, self.errorInt)
         r_cmd = URYawControl(inputs, state, self.parameters)
         return n_des, r_cmd
 
-    def inner_controller(self, state, inputs, n_des, r_sp):
+    def inner_controller(self, state: State, inputs: Inputs, n_des, r_sp):
         # Subsystem
         Tc = None#time.time()    # Current time
         ssres = self.subsystem(state, n_des, Tc)
@@ -101,7 +110,7 @@ class INDIController:
 
         return n
 
-    def init_controller(self, states, inputs, t):
+    def init_controller(self, states: State, inputs: Inputs, t: float):
         self.subsystem.init_subsystem(t)
         # filters
         self.low_pass_zTarg.start(inputs.zTarget, t)
@@ -117,7 +126,8 @@ class INDIController:
         #ssres = self.subsystem(states, n_des)
         
         #h0, posdd, U0, U1 = ssres['h0'], ssres['posdd'], ssres['U0'], ssres['U1']
-        
+        self._state = states
+        self._inputs = inputs
 
 
 

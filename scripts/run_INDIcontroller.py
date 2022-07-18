@@ -47,7 +47,7 @@ if __name__ == "__main__":
     state = State(invert_axis=True)
     state.update_fail_id(parameters.fail_id)
     inputs = Inputs()
-    inputs.updatePositionTarget([0, 0, -2])
+    inputs.update_position_target([0, 0, -2])
     inputs.update_yawTarget(0)
 
     obs = env.reset()
@@ -65,11 +65,11 @@ if __name__ == "__main__":
     observations = []
     actions = []
     for i in range(max_path_length):
-        inputs.updatePositionTarget(trajectory[i])
+        inputs.update_position_target(trajectory[i])
         ##if i == 5000:
         ##    print('setposition')
         ##    import pdb; pdb.set_trace()
-        ##    inputs.updatePositionTarget([0, 1, -2])
+        ##    inputs.update_position_target([0, 1, -2])
         control_signal = controller(state, inputs)
         #print("[{:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(*list(control_signal)))
         #print("signal rotor 4 --> {:.1f}".format(control_signal[-1]))

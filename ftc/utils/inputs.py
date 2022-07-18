@@ -1,3 +1,6 @@
+from typing import Union, List
+import numpy as np
+
 class Inputs:
     def __init__(self):
         self.xTarget = None
@@ -8,16 +11,16 @@ class Inputs:
     def update(self, observation):
         pass
     
-    def update_xtarget(self, x_target):
+    def update_xtarget(self, x_target: float):
         self.xTarget = x_target
     
-    def update_ytarget(self, y_target):
+    def update_ytarget(self, y_target: float):
         self.yTarget = y_target
 
     def update_ztarget(self, z_target):
         self.zTarget = z_target
     
-    def updatePositionTarget(self, position):
+    def update_position_target(self, position: Union[np.ndarray, List[float]]):
         self.update_xtarget(position[0])
         self.update_ytarget(position[1])
         self.update_ztarget(position[2])
