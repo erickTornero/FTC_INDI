@@ -1,8 +1,7 @@
 # Wrapper for the ros & gazebo simulator
 # based on the common wrapper
-
+from typing import Dict, Optional, Tuple
 import gym
-from gym import spaces
 import numpy as np
 import rospy
 
@@ -44,28 +43,28 @@ class BaseWrapperROS(gym.Env):
         """
         raise NotImplementedError()
     
-    def _compute_rewards(self, states, action):
+    def _compute_rewards(self, states_dict: Dict[str, np.ndarray], action: np.ndarray, target_pos: Optional[np.ndarray]=None) -> float:
         """
         Compute Rewards of the transition,
         given the states and the action taken
         """
         raise NotImplementedError()
 
-    def _compute_done(self, states):
+    def _compute_done(self, states_dict: Dict[str, np.ndarray], target_pos: Optional[np.ndarray]=None) -> bool:
         """
         Compute done to early stop from states
         """
         raise NotImplementedError()
         
 
-    def _get_observation_state(self):
+    def _get_observation_state(self) -> Dict[str, np.ndarray]:
         """
         Get the observation states flatten
         """
         raise NotImplementedError()
 
     
-    def _flat_observation(self, obs_dict):
+    def _flat_observation(self, obs_dict: Dict[str, np.ndarray]) -> np.ndarray:
         """
         Flatten the observation
         """
@@ -113,7 +112,11 @@ class BaseWrapperROS(gym.Env):
     Starts definition of public methods
     """
 
-    def step(self, action, targetpos=None):
+    def step(
+        self, 
+        action: np.ndarray, 
+        targetpos: Optional[np.ndarray]=None
+    ) -> Tuple[np.ndarray, float, bool, Dict]:
         """
         Execute the step process given an action
         @action: a numpy array of dimension (4, )

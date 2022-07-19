@@ -1,9 +1,7 @@
 import os
-from xmlrpc.client import boolean
+from typing import List
 import joblib
 import numpy as np
-from ftc.utils.state import State
-from ftc.utils.inputs import Inputs
 from ftc.utils.transforms import pos_invert_yz
 from ftc.utils.gen_trajectories import Trajectory
 from ftc.indi.parameters import Parameters
@@ -44,41 +42,22 @@ if __name__ == "__main__":
     controller = INDIController(parameters=parameters, T_sampling=Ts, state_space=env.state_space)
 
     max_path_length = 10000
-    state = State(invert_axis=True)
-    state.update_fail_id(parameters.fail_id)
-    inputs = Inputs()
-    inputs.update_position_target([0, 0, -2])
-    inputs.update_yawTarget(0)
 
     obs = env.reset()
-    state.update(env.last_observation)
     cum_reward = 0
     if debug:
         import pdb; pdb.set_trace()
 
     trajectory_manager = Trajectory(max_path_length, -3)
     trajectory = trajectory_manager.gen_points('point', 2)
-    #for _ in range(2):
-    #    obs, _, _, _, = env.step(np.array([400, 0, 400, 0]))
-    #    state.update(env.last_observation)
     #controller.init_controller(state, inputs, 0)
     controller.init_controller(env.last_observation, trajectory[0], parameters.fail_id, 0)
-    observations = []
-    actions = []
+    observations: List[np.ndarray] = []
+    actions: List[np.ndarray] = []
     for i in range(max_path_length):
-        #inputs.update_position_target(trajectory[i])
-        ##if i == 5000:
-        ##    print('setposition')
-        ##    import pdb; pdb.set_trace()
-        ##    inputs.update_position_target([0, 1, -2])
         #control_signal = controller(state, inputs)
         control_signal = controller.get_action(obs, trajectory[i], env.last_observation)
-        #import pdb; pdb.set_trace()
-        #print("[{:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(*list(control_signal)))
-        #print("signal rotor 4 --> {:.1f}".format(control_signal[-1]))
-        #tmp = control_signal[3]
-        #control_signal[3] = control_signal[1]
-        #control_signal[1] = tmp
+
 
         #control_signal[3] = min(control_signal[3], 100)
         #print("[{:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(*list(control_signal)))

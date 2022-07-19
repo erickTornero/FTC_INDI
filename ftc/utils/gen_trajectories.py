@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 
 class Trajectory:
@@ -33,7 +34,7 @@ class Trajectory:
 
         #assert nrounds >= 0, 'nrounds must be a possitive value'
 
-    def gen_points(self, wave: str, nrounds: int) -> np.ndarray:
+    def gen_points(self, wave: str, nrounds: Optional[int]=0) -> np.ndarray:
         """
             Generate a trajectory in numpy.ndarray format
             @wave: type of wave, sin-vertical, circle, helicoid, stepped, point, pulse

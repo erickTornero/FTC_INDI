@@ -1,5 +1,5 @@
-
 import numpy as np
+from typing import Dict, Optional
 from collections import OrderedDict
 from .base_wrapper_ros import BaseWrapperROS
 from gym import spaces
@@ -135,7 +135,11 @@ class WrapperROSQuad(BaseWrapperROS):
 
         return distance > self.max_radius or ang_vel_es
 
-    def _compute_rewards(self, states_dict, action, targetpos=None):
+    def _compute_rewards(
+        self, states_dict: Dict[str, np.ndarray], 
+        action: np.ndarray, 
+        targetpos: Optional[np.ndarray]=None
+    ) -> float:
         position    =   states_dict['position']
         distance    =   (targetpos - position) if targetpos is not None else (self.target_pos - position)
         distance    =   np.sqrt((distance * distance).sum())
@@ -165,7 +169,7 @@ class WrapperROSQuad(BaseWrapperROS):
     
 
 
-    def _flat_observation(self, obs_dict):
+    def _flat_observation(self, obs_dict: Dict[str, np.ndarray])-> np.ndarray:
         _state_space    =   [obs_dict[name] for name in self.state_space.names]
         
         return np.concatenate(

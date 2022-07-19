@@ -42,7 +42,12 @@ class INDIController(BaseController):
         self.state_space = state_space
         #self.derivator_z.start(-6, start_time) #TODO: hardcoded
 
-    def get_action(self, obs: np.ndarray, targetpos: np.ndarray, obs_dict: Optional[Dict[str, np.ndarray]]=None):
+    def get_action(
+        self, 
+        obs: np.ndarray, 
+        targetpos: np.ndarray, 
+        obs_dict: Optional[Dict[str, np.ndarray]]=None
+    ) -> np.ndarray:
         if obs_dict is not None:
             self._state.update(obs_dict)
         else:
@@ -127,8 +132,8 @@ class INDIController(BaseController):
         _state = State(invert_axis=True)
         _state.update_fail_id(damaged_motor)
         _input = Inputs()
-        _input.update_yawTarget(0)
         _input.update_position_target(position_target)
+        _input.update_yawTarget(0)
         _state.update(obs_dict_initial)
 
         inputs = _input
