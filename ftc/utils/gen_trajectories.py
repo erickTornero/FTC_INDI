@@ -10,12 +10,19 @@ class Trajectory:
         * stepped
         * point
     """
-    def __init__(self, npoints, z_bias=4.0):
+    def __init__(self, npoints: int, z_bias: float=4.0):
         """
-            @args:
-            * npoints:  Number of points to generate in a trajectory (keep in mind max_path_length)
-            * nrounds:  in case of cicled trajectories
-            * z_bias:   Generate the trajectory with a bias in z-axis (avoid to crash with ground before early stop)
+            Generate trajectories for quadrotor
+            Availabel trajectories:
+            * sin-vertical
+            * circle
+            * helicoid
+            * stepped
+            * point
+
+            args:
+            @npoints:  Number of points to generate in a trajectory (keep in mind max_path_length)
+            @z_bias:   Generate the trajectory with a bias in z-axis (avoid to crash with ground before early stop)
         """
 
         self.dt         =   float(1.0/npoints)
@@ -26,7 +33,12 @@ class Trajectory:
 
         #assert nrounds >= 0, 'nrounds must be a possitive value'
 
-    def gen_points(self, wave, nrounds):
+    def gen_points(self, wave: str, nrounds: int) -> np.ndarray:
+        """
+            Generate a trajectory in numpy.ndarray format
+            @wave: type of wave, sin-vertical, circle, helicoid, stepped, point, pulse
+            @nrounds: How many rounds take, used for cycling waves like circle,
+        """
         t   =   np.arange(self.npoints+1)
         if wave == 'sin-vertical':
             x   =   t * self.dt

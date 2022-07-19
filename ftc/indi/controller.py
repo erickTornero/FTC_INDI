@@ -49,7 +49,12 @@ class INDIController(BaseController):
             self._state.update(self.state_space.get_obs_dict(obs))
 
         self._inputs.update_position_target(targetpos)
-        return self.__call__(self._state, self._inputs)
+        control_signal = self.__call__(self._state, self._inputs)
+        # swap control signal
+        tmp = control_signal[3]
+        control_signal[3] = control_signal[1]
+        control_signal[1] = tmp
+        return control_signal
 
     def __call__(self, state: State, inputs: Inputs):
         n_des, r_cmd = self.outer_controller(state, inputs)
@@ -116,7 +121,19 @@ class INDIController(BaseController):
 
         return n
 
-    def init_controller(self, states: State, inputs: Inputs, t: float):
+    def init_controller(self, obs_dict_initial: Dict[str, np.ndarray], position_target: np.ndarray, damaged_motor: int, t: float):#, states: State, inputs: Inputs, t: float):
+    #def init_controller(self, states: State, inputs: Inputs, t: float):
+        # initialize state and inputs
+        _state = State(invert_axis=True)
+        _state.update_fail_id(damaged_motor)
+        _input = Inputs()
+        _input.update_yawTarget(0)
+        _input.update_position_target(position_target)
+        _state.update(obs_dict_initial)
+
+        inputs = _input
+        states = _state
+
         self.subsystem.init_subsystem(t)
         # filters
         self.low_pass_zTarg.start(inputs.zTarget, t)

@@ -61,23 +61,24 @@ if __name__ == "__main__":
     #for _ in range(2):
     #    obs, _, _, _, = env.step(np.array([400, 0, 400, 0]))
     #    state.update(env.last_observation)
-    controller.init_controller(state, inputs, 0)
+    #controller.init_controller(state, inputs, 0)
+    controller.init_controller(env.last_observation, trajectory[0], parameters.fail_id, 0)
     observations = []
     actions = []
     for i in range(max_path_length):
-        inputs.update_position_target(trajectory[i])
+        #inputs.update_position_target(trajectory[i])
         ##if i == 5000:
         ##    print('setposition')
         ##    import pdb; pdb.set_trace()
         ##    inputs.update_position_target([0, 1, -2])
-        control_signal = controller(state, inputs)
-        #control_signal = controller.get_action(obs, trajectory[i],)
+        #control_signal = controller(state, inputs)
+        control_signal = controller.get_action(obs, trajectory[i], env.last_observation)
         #import pdb; pdb.set_trace()
         #print("[{:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(*list(control_signal)))
         #print("signal rotor 4 --> {:.1f}".format(control_signal[-1]))
-        tmp = control_signal[3]
-        control_signal[3] = control_signal[1]
-        control_signal[1] = tmp
+        #tmp = control_signal[3]
+        #control_signal[3] = control_signal[1]
+        #control_signal[1] = tmp
 
         #control_signal[3] = min(control_signal[3], 100)
         #print("[{:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(*list(control_signal)))
@@ -88,7 +89,7 @@ if __name__ == "__main__":
             break
         observations.append(obs)
         actions.append(control_signal)
-        state.update(env.last_observation)
+        #state.update(env.last_observation)
         cum_reward += reward
 
     paths = {
