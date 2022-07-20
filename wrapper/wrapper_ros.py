@@ -65,6 +65,8 @@ class WrapperROSQuad(BaseWrapperROS):
         self._sensors_subs      =   rospy.Subscriber('/hummingbird/ground_truth/odometry', Odometry, self._callback_sensor_meassurements)
         self._imu_subs          =   rospy.Subscriber(self._imu_topic_name, Imu, self._callback_imu_meassurements)
 
+        if 'max_radius' not in kwargs_init:
+            kwargs_init = kwargs_init['args_init_distribution']
         self.max_radius         =   kwargs_init['max_radius']
         self.max_ang_speed      =   kwargs_init['max_ang_speed']
         self.max_radius_init    =   kwargs_init['max_radius_init']

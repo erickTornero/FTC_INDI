@@ -50,7 +50,7 @@ class HoverController(BaseController):
         self.state_space_names = state_space.names 
         self.indexes_obs = state_space.get_state_space_indexes()
 
-    def get_action(self, obs: np.ndarray, targetpos: np.ndarray) -> np.ndarray:
+    def get_action(self, obs: np.ndarray, targetpos: np.ndarray, *args) -> np.ndarray:
         return self.compute_rotors_speeds_v2(*get_values(obs, self.indexes_obs, self.state_space_names), targetpos)
 
     def compute_rotors_speeds(self, rotmat, pos, euler, linear_vel, angular_vel):
@@ -127,7 +127,7 @@ class HoverController(BaseController):
         target_acel     =   np.zeros(3, dtype=np.float32)  
         velocity_W      =   np.matmul(rotmat, linear_vel)
         velocity_error  =   velocity_W - target_vel
-        print(velocity_W)
+        #print(velocity_W)
 
         acceleration    =   ((position_error * self.position_gain) + (velocity_error * self.velocity_gain))/self.mass - np.array([0.0, 0.0, self.gravity]) - target_acel
         return acceleration

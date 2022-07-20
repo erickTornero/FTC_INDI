@@ -31,6 +31,7 @@ class SwitchController:
             self.env.last_observation, position_target, damaged_rotor_index, c_time
         )
         self.controller = self.ftc_controller
+        print('Switching controller to faulted case')
 
     def switch_fault_free(self):
         self.controller = self.ffree_controller
