@@ -12,6 +12,7 @@ from wrapper.state_space import StateSpaceRobots
 from ..base_controller import BaseController
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
+from ftc.utils.transforms import pos_invert_yz
 
 class INDIController(BaseController):
     def __init__(self, parameters:Parameters, T_sampling:float=None, state_space: Optional[StateSpaceRobots]=None):
@@ -48,6 +49,7 @@ class INDIController(BaseController):
         targetpos: np.ndarray, 
         obs_dict: Optional[Dict[str, np.ndarray]]=None
     ) -> np.ndarray:
+        targetpos = pos_invert_yz(targetpos)
         if obs_dict is not None:
             self._state.update(obs_dict)
         else:
@@ -128,6 +130,7 @@ class INDIController(BaseController):
 
     def init_controller(self, obs_dict_initial: Dict[str, np.ndarray], position_target: np.ndarray, damaged_motor: int, t: float):#, states: State, inputs: Inputs, t: float):
     #def init_controller(self, states: State, inputs: Inputs, t: float):
+        position_target = pos_invert_yz(position_target)
         # initialize state and inputs
         _state = State(invert_axis=True)
         _state.update_fail_id(damaged_motor)

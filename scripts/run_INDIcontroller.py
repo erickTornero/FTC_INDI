@@ -2,7 +2,6 @@ import os
 from typing import List
 import joblib
 import numpy as np
-from ftc.utils.transforms import pos_invert_yz
 from ftc.utils.gen_trajectories import Trajectory
 from ftc.indi.parameters import Parameters
 from ftc.indi.controller import INDIController
@@ -48,8 +47,8 @@ if __name__ == "__main__":
     if debug:
         import pdb; pdb.set_trace()
 
-    trajectory_manager = Trajectory(max_path_length, -3)
-    trajectory = trajectory_manager.gen_points('point', 2)
+    trajectory_manager = Trajectory(max_path_length)
+    trajectory = trajectory_manager.gen_points('point', z_bias=3, nrounds=2)
     #controller.init_controller(state, inputs, 0)
     controller.init_controller(env.last_observation, trajectory[0], parameters.fail_id, 0)
     observations: List[np.ndarray] = []
@@ -62,7 +61,7 @@ if __name__ == "__main__":
         #control_signal[3] = min(control_signal[3], 100)
         #print("[{:.1f}, {:.1f}, {:.1f}, {:.1f}]".format(*list(control_signal)))
         #print("signal rotor 4 --> {:.1f}".format(control_signal[-1]))
-        obs, reward, done, info  = env.step(control_signal, pos_invert_yz(trajectory[i]))
+        obs, reward, done, info  = env.step(control_signal, trajectory[i])#pos_invert_yz(trajectory[i]))
         if done:
             env.reset()
             break

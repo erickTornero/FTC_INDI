@@ -1,6 +1,7 @@
 import json
+from typing import Optional
 class Parameters:
-    def __init__(self, quad_params_path=None, control_params_path=None):
+    def __init__(self, quad_params_path: Optional[str]=None, control_params_path: Optional[str]=None):
         if quad_params_path is None or control_params_path is None:
             print("WARNING: Running with defailt parameters")
             # Controller related Parameters
