@@ -1,4 +1,5 @@
 import os
+from ftc.switch_controllers.switch_controller import SwitchController
 from ftc.utils.logger import Logger
 from wrapper.wrapper_crippled import QuadrotorEnvRos
 
@@ -8,6 +9,7 @@ from typing import Optional
 
 experiment_config = {
     "max_path_length": 10000,
+    "z_bias": -6.0,
     "nrollouts": 20,
     'args_init_distribution': {
         'max_radius': 4.2,
@@ -38,7 +40,10 @@ experiment_config = {
             "ou_mu": 0.78, 
             "seed":  42
         }
-    }
+    },
+    'state_space_names': [
+        'rotation_matrix', 'position', 'euler', 'linear_vel', 'angular_vel'
+    ]
 }
 
 def rollouts(
@@ -52,5 +57,13 @@ def rollouts(
     logger: Optional[Logger]=None,
 ):
     allow_inject = failure_info['allow']
-    if allow_inject:
-        pass
+    controller = SwitchController(env)
+    obs = env.reset()
+    done = False
+    timestep = 0
+    cum_reward = 0
+
+
+    for i_roll in range(1, nrolls + 1):
+        while not done and timestep < max_path_length:
+            pass
