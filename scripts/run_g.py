@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     experiment_config = {
         "max_path_length": 5000,
-        "nrollouts": 2,
+        "nrollouts": 20,
         "environment": {
             'args_init_distribution': {
                 'max_radius': 4.2,
@@ -30,14 +30,14 @@ if __name__ == "__main__":
         "trajectory_args"   :   {
             "wave"          :   'point',
             "nrounds"       :   2,
-            "z_bias"        :   3.0,
+            "z_bias"        :   6.0,
         },
         "controllers": {
             'fault_free': 'HoverController',
             'fault_case': 'indi',
         },
         "inject_failure"    :   {
-            "allow": False,
+            "allow": True,
             "type": "push",  # "push" or "ornstein"
             "damaged_motor_index": 2, #allowed [0, 1, 2, 3]
             "push_failure_at": 2500,
@@ -55,7 +55,7 @@ if __name__ == "__main__":
         ]
     }
     # TODO: we dont need to initialize the environment with these args
-    init_pos = np.array([0, 0, 3])
+    init_pos = np.array([0, 0, 6])
     crippled_degree = np.ones(4)
 
     env = QuadrotorEnvRos(init_pos, crippled_degree, **experiment_config['environment'])

@@ -72,8 +72,8 @@ def exec_rollouts(
     type_failure    =   failure_info['type']
     if allow_inject:
         push_failure_at =   failure_info['push_failure_at'] if type_failure == 'push' else -1e5
-        noise_ornstein  = None
-        raise NotImplementedError('Not implemented ornstein noise') if type_failure else -1
+        #noise_ornstein  = None
+        #raise NotImplementedError('Not implemented ornstein noise') if type_failure else -1
     else:
         push_failure_at = -1e5
         noise_ornstein = None
@@ -86,8 +86,9 @@ def exec_rollouts(
     paths           =   []
     cum_rewards     =   []
     total_timesteps =   []
-    env.set_task(np.ones(4))
+    
     for i_roll in range(1, nrolls + 1):
+        env.set_task(np.ones(4))
         targetposition = trajectory[0]
         running_paths=dict(observations=[], actions=[], rewards=[], dones=[], next_obs=[], target=[])
 
@@ -96,7 +97,7 @@ def exec_rollouts(
         timestep    =   0
         cum_reward  =   0
         while not done and timestep < max_path_length:
-            if (push_failure_at == timestep): env.set_task([1.0, 1.0, 0.0, 1.0]); print('setting env')
+            if (push_failure_at == timestep): env.set_task(np.array([1.0, 1.0, 0.0, 1.0])); print('setting env')
             if (push_failure_at + DELAY_TIMESTEPS) == timestep:
                 controller.switch_faulted(targetposition, damaged_rotor_index=2, c_time=0)
             
