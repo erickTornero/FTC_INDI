@@ -56,7 +56,7 @@ experiment_config = {
 }
 
 def exec_rollouts(
-    env: QuadrotorEnvRos,
+    environment_config: dict,
     trajectory_info: dict,
     controllers_info: dict,
     failure_info: dict,
@@ -79,7 +79,8 @@ def exec_rollouts(
         noise_ornstein = None
     
     # create trajectory
-    trajectory = Trajectory(max_path_length).gen_points(**trajectory_info)
+    trajectory  =   Trajectory(max_path_length).gen_points(**trajectory_info)
+    env         =   QuadrotorEnvRos(trajectory[0], np.ones(4), **environment_config)
 
     controller = SwitchController(env, MODE_CONTROLLER.FAULT_FREE)
 
@@ -91,7 +92,7 @@ def exec_rollouts(
         env.set_task(np.ones(4))
         targetposition = trajectory[0]
         running_paths=dict(observations=[], actions=[], rewards=[], dones=[], next_obs=[], target=[])
-
+        controller.switch_fault_free()
         obs         =   env.reset()
         done        =   False
         timestep    =   0

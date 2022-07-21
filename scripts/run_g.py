@@ -1,17 +1,16 @@
 import os
 import json
 import glob
-import numpy as np
 from ftc.utils.logger import Logger
-from wrapper.wrapper_crippled import QuadrotorEnvRos
 from ftc.utils.exec_rolls import exec_rollouts
 
 if __name__ == "__main__":
-    save_paths = './data/rollouts12'
+    save_paths = './data/rollouts13'
 
     experiment_config = {
         "max_path_length": 5000,
         "nrollouts": 20,
+        "early_stop": True,
         "environment": {
             'args_init_distribution': {
                 'max_radius': 4.2,
@@ -54,11 +53,6 @@ if __name__ == "__main__":
             
         ]
     }
-    # TODO: we dont need to initialize the environment with these args
-    init_pos = np.array([0, 0, 6])
-    crippled_degree = np.ones(4)
-
-    env = QuadrotorEnvRos(init_pos, crippled_degree, **experiment_config['environment'])
 
     logger  =   Logger(save_paths, 'logtest.txt')
 
@@ -66,8 +60,8 @@ if __name__ == "__main__":
         configsfiles    =   glob.glob(os.path.join(save_paths,'*.json'))
         files_paths     =   glob.glob(os.path.join(save_paths,'*.pkl'))
 
-        assert len(configsfiles) ==0, 'The folder is busy, select other'
-        assert len(files_paths)==0, 'The folder is busy, select another one'
+        #assert len(configsfiles) ==0, 'The folder is busy, select other'
+        assert len(files_paths)==0, 'The folder is busy {}, select another one'.format(save_paths)
         if not os.path.exists(save_paths):
             os.makedirs(save_paths)
         
@@ -75,7 +69,7 @@ if __name__ == "__main__":
             json.dump(experiment_config, fp, indent=2)
 
     exec_rollouts(
-        env=env, 
+        environment_config=experiment_config['environment'], 
         trajectory_info=experiment_config['trajectory_args'], 
         controllers_info={}, 
         failure_info=experiment_config['inject_failure'],
@@ -83,6 +77,6 @@ if __name__ == "__main__":
         max_path_length=experiment_config['max_path_length'],
         save_paths=save_paths,
         logger=logger,
-        run_all_steps=True,
+        run_all_steps=not experiment_config['early_stop'],
     )
 
