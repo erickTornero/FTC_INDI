@@ -8,7 +8,7 @@ setuptools.setup(
     description="Indi Control for Faulted Rotor in Quadrotors",
     url="https://github.com/erickTornero/FTC_INDI",
     scripts=[],
-    packages=setuptools.find_packages(include=['ftc', 'ftc.*', 'wrapper']),
+    packages=setuptools.find_packages(include=['ftc', 'ftc.*', 'wrapper', 'data_analysis']),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

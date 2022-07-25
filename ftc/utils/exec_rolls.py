@@ -67,9 +67,9 @@ def exec_rollouts(
     run_all_steps: bool=False,
 ):  
     #Failure variables initialization
-    DELAY_TIMESTEPS =   4
     allow_inject    =   failure_info['allow']
     type_failure    =   failure_info['type']
+    delay_timesteps =   failure_info['delay_controller']
     if allow_inject:
         push_failure_at =   failure_info['push_failure_at'] if type_failure == 'push' else -1e5
         #noise_ornstein  = None
@@ -92,14 +92,15 @@ def exec_rollouts(
         env.set_task(np.ones(4))
         targetposition = trajectory[0]
         running_paths=dict(observations=[], actions=[], rewards=[], dones=[], next_obs=[], target=[])
-        controller.switch_fault_free()
         obs         =   env.reset()
+        if allow_inject: controller.switch_fault_free()
+        else: controller.switch_faulted(targetposition, 2, 0)
         done        =   False
         timestep    =   0
         cum_reward  =   0
         while not done and timestep < max_path_length:
             if (push_failure_at == timestep): env.set_task(np.array([1.0, 1.0, 0.0, 1.0])); print('setting env')
-            if (push_failure_at + DELAY_TIMESTEPS) == timestep:
+            if (push_failure_at + delay_timesteps) == timestep:
                 controller.switch_faulted(targetposition, damaged_rotor_index=2, c_time=0)
             
             next_target_pos =   trajectory[timestep + 1]

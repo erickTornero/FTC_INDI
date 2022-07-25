@@ -65,7 +65,7 @@ if __name__ == '__main__':
     trajectory = trajectory_manager.gen_points(**config['trajectory_args'])
 
     inject_failure = config['inject_failure']
-    save_paths = './data/rollouts11'
+    save_paths = './data/rolls27'
     logger  =   Logger(save_paths, 'logtest.txt')
     nrolls = config['nrollouts']
 

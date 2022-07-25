@@ -3,7 +3,7 @@
     "fail_id": 2,
     "DRF_enable": 0,
     "fail_time": 0.1,
-    "chi": 140,
+    "chi": 105,
     "pos_z_p_gain": 25,
     "pos_z_d_gain": 25,
     "axis_tilt": 0.1,

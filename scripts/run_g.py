@@ -1,3 +1,7 @@
+"""
+An script to test push failure while flying
+"""
+
 import os
 import json
 import glob
@@ -5,7 +9,7 @@ from ftc.utils.logger import Logger
 from ftc.utils.exec_rolls import exec_rollouts
 
 if __name__ == "__main__":
-    save_paths = './data/rollouts13'
+    save_paths = './data/rolls26'
 
     experiment_config = {
         "max_path_length": 5000,
@@ -13,9 +17,9 @@ if __name__ == "__main__":
         "early_stop": True,
         "environment": {
             'args_init_distribution': {
-                'max_radius': 4.2,
+                'max_radius': 6.0,#4.2,
                 'max_ang_speed': 30,
-                'max_radius_init': 0.0,
+                'max_radius_init': 2.0,
                 'angle_rad_std': 0.0,
                 'angular_speed_mean': 0.0,
                 'angular_speed_std': 0.0,
@@ -27,7 +31,7 @@ if __name__ == "__main__":
         },
         
         "trajectory_args"   :   {
-            "wave"          :   'point',
+            "wave"          :   'circle',
             "nrounds"       :   2,
             "z_bias"        :   6.0,
         },
@@ -36,11 +40,12 @@ if __name__ == "__main__":
             'fault_case': 'indi',
         },
         "inject_failure"    :   {
-            "allow": True,
+            "allow": False,
             "type": "push",  # "push" or "ornstein"
             "damaged_motor_index": 2, #allowed [0, 1, 2, 3]
             "push_failure_at": 2500,
             "push_new_task": 0.0,
+            "delay_controller": 20,
             "ornstein_uhlenbeck": {
                 "delta": 0.03,
                 "sigma": 0.20, 
