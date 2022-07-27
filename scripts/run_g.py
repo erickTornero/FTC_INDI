@@ -9,7 +9,7 @@ from ftc.utils.logger import Logger
 from ftc.utils.exec_rolls import exec_rollouts
 
 if __name__ == "__main__":
-    save_paths = './data/rolls26'
+    save_paths = './data/rolls34'
 
     experiment_config = {
         "max_path_length": 5000,
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         
         "trajectory_args"   :   {
             "wave"          :   'circle',
-            "nrounds"       :   2,
+            "nrounds"       :   1,
             "z_bias"        :   6.0,
         },
         "controllers": {
@@ -70,8 +70,8 @@ if __name__ == "__main__":
         if not os.path.exists(save_paths):
             os.makedirs(save_paths)
         
-        with open(os.path.join(save_paths, 'experiment_config.json'), 'w') as fp:
-            json.dump(experiment_config, fp, indent=2)
+        #with open(os.path.join(save_paths, 'experiment_config.json'), 'w') as fp:
+        #    json.dump(experiment_config, fp, indent=2)
 
     exec_rollouts(
         environment_config=experiment_config['environment'], 
@@ -83,5 +83,6 @@ if __name__ == "__main__":
         save_paths=save_paths,
         logger=logger,
         run_all_steps=not experiment_config['early_stop'],
+        experiment_config=experiment_config,
     )
 

@@ -17,8 +17,8 @@ from data_analisys import PathsExtractor
 from plot_utils.analisys_distributions import GeneratePlotsDistributions
 
 global_path =   './data/'
-roll_idx    =   '26'
-paths_list  =   [17]
+roll_idx    =   '34'
+paths_list  =   [3]
 
 
 with open(global_path + 'rolls'+roll_idx+'/experiment_config.json') as fp:
@@ -95,8 +95,8 @@ def create_data_list(train_path_list, roll_id_list, paths_lists):
 
 
 train_path_list =   3 * ['./data/']
-roll_id_list    =   [26, 22, 25]
-paths_list      =   [[19], [4], [9]]
+roll_id_list    =   [28, 22, 25]
+paths_list      =   [[18], [4], [9]]
 titles          =   ['Sin-vertical', 'Circle', 'Helicoid']
 
 plot_grid_3dtrajectories(*create_data_list(train_path_list, roll_id_list, paths_list), titles=titles)

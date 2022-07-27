@@ -1,4 +1,5 @@
 import os
+import json
 from time import time
 from ftc.switch_controllers.switch_controller import SwitchController, MODE_CONTROLLER
 from ftc.utils.gen_trajectories import Trajectory
@@ -65,6 +66,7 @@ def exec_rollouts(
     save_paths: os.path=None,
     logger: Optional[Logger]=None,
     run_all_steps: bool=False,
+    experiment_config:dict = {}
 ):  
     #Failure variables initialization
     allow_inject    =   failure_info['allow']
@@ -83,6 +85,9 @@ def exec_rollouts(
     env         =   QuadrotorEnvRos(trajectory[0], np.ones(4), **environment_config)
 
     controller = SwitchController(env, MODE_CONTROLLER.FAULT_FREE)
+    experiment_config['indi_params'] = controller.ftc_controller.parameters.params
+    with open(os.path.join(save_paths, 'experiment_config.json'), 'w') as fp:
+        json.dump(experiment_config, fp, indent=2)
 
     paths           =   []
     cum_rewards     =   []
