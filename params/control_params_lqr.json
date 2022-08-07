@@ -1,4 +1,18 @@
 {
     "freq": 500,
-    "fail_id": 1
+    "fail_id": 2,
+    "DRF_enable": false,
+    "axis_tilt": 0.1,
+    "yrc_kp_r": 5,
+    "kpz_pos": 1,
+    "kdz_pos": 1,
+    "YRC_Kp_r": 40.0,
+    "YRC_Kp_psi": 40.0,
+    "position_maxAngle": 30,
+    "position_Kp_pos": [0.1e2, 0.1e2, 10],
+    "position_maxVel": 10,
+    "position_intLim": 2.0,
+    "position_Ki_vel": [10, 10, 50.0],
+    "position_Kp_vel": [3, 3, 2.0],
+    "t_filter": 0.02
 }
