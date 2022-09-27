@@ -96,7 +96,7 @@ def exec_rollouts(
     for i_roll in range(1, nrolls + 1):
         env.set_task(np.ones(4))
         targetposition = trajectory[0]
-        running_paths=dict(observations=[], actions=[], rewards=[], dones=[], next_obs=[], target=[])
+        running_paths=dict(observations=[], actions=[], rewards=[], dones=[], next_obs=[], target=[], ndes=[], yaw_speed_cmd=[])
         obs         =   env.reset()
         if allow_inject: controller.switch_fault_free()
         else: controller.switch_faulted(targetposition, 2, 0)
@@ -128,7 +128,9 @@ def exec_rollouts(
                     rewards=np.asarray(running_paths['rewards']),
                     dones=np.asarray(running_paths['dones']),
                     next_obs=np.asarray(running_paths['next_obs']),
-                    target=np.asarray(running_paths['target'])
+                    target=np.asarray(running_paths['target']),
+                    ndes=np.vstack(controller.ftc_controller.ndes_list),
+                    yaw_speed_cmd=np.vstack(controller.ftc_controller.yaw_speed_cmd),
                 ))
             # endif
             

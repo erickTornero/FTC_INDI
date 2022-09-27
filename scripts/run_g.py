@@ -9,7 +9,7 @@ from ftc.utils.logger import Logger
 from ftc.utils.exec_rolls import exec_rollouts
 
 if __name__ == "__main__":
-    save_paths = './data/rolls34'
+    save_paths = './data/rolls62'
 
     experiment_config = {
         "max_path_length": 5000,
@@ -24,14 +24,14 @@ if __name__ == "__main__":
                 'angular_speed_mean': 0.0,
                 'angular_speed_std': 0.0,
             },
-            "rate": 500,
+            "rate": 1000,
             'state_space_names': [
                 'rotation_matrix', 'position', 'euler', 'linear_vel', 'angular_vel'
             ],
         },
         
         "trajectory_args"   :   {
-            "wave"          :   'circle',
+            "wave"          :   'point',
             "nrounds"       :   1,
             "z_bias"        :   6.0,
         },

@@ -56,14 +56,16 @@ if __name__ == '__main__':
     if parameters.fail_id>=0:
         crippled_degree[parameters.fail_id] = 0.0
 
-    env = QuadrotorEnvRos(np.zeros(3, dtype=np.float32), crippled_degree, state_space, rate, **config['args_init_distribution'])
-
-    controller = LQRController(parameters=parameters, T_sampling=Ts, state_space=env.state_space)
+    
 
     max_path_length = config['max_path_length']
 
     trajectory_manager = Trajectory(max_path_length)
     trajectory = trajectory_manager.gen_points(**config['trajectory_args'])
+
+    env = QuadrotorEnvRos(trajectory[0], crippled_degree, state_space, rate, **config['args_init_distribution'])
+
+    controller = LQRController(parameters=parameters, T_sampling=Ts, state_space=env.state_space)
 
     inject_failure = config['inject_failure']
     
@@ -89,6 +91,7 @@ if __name__ == '__main__':
         max_path_length, 
         save_paths, 
         trajectory,
-        logger=logger, 
-        inject_failure=inject_failure
+        logger=logger,
+        inject_failure=inject_failure,
+        run_all_steps=True,
     )

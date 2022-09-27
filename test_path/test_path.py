@@ -11,14 +11,15 @@ from plot_utils.analize_paths import (
 from plot_utils.analize_paths import (
     plot_pos_over_time_axes, plot_ang_velocity_otime_axes,
     plot_euler_over_time_axes, plot_grid_3dtrajectories,
-    plot_col_summary_trajectory, plot_lin_velocity_otime_axes
+    plot_col_summary_trajectory, plot_lin_velocity_otime_axes,
+    plot_ndes_over_time_axes
 )
 from data_analisys import PathsExtractor 
 from plot_utils.analisys_distributions import GeneratePlotsDistributions
 
 global_path =   './data/'
-roll_idx    =   '34'
-paths_list  =   [3]
+roll_idx    =   '61'
+paths_list  =   [1]
 
 
 with open(global_path + 'rolls'+roll_idx+'/experiment_config.json') as fp:
@@ -39,6 +40,11 @@ targets         =   path_extractor.get_targets(concat=False)
 angular_speed   =   path_extractor.get_angular_velocities(concat=False)
 euler           =   path_extractor.get_euler(concat=False)
 linear_speed    =   path_extractor.get_linear_velocities(concat=False)
+try:
+    ndes            =   path_extractor.get_ndes(concat=False)
+    yaw_reference   =   path_extractor.get_yaw_speed_cmd(concat=False)
+except:
+    print('NDes not detected!')
 # Using the plot functions
 plot_forces(actions, mask, max_path_length)
 #plot_trajectory(positions, targets)
@@ -47,11 +53,14 @@ plot_forces(actions, mask, max_path_length)
 #plot_euler_over_time(euler, max_path_length)
 #plot_3Dtrajectory(positions, targets, ['g','b'])
 #plt.show()
-fig, axes = plt.subplots(4, 3, figsize=(12,9))
+fig, axes = plt.subplots(4 if ndes is None else 5, 3, figsize=(12,9))
 plot_pos_over_time_axes(positions, targets, axes[0], max_path_length)
 plot_ang_velocity_otime_axes(angular_speed, axes[1], max_path_length)
 plot_euler_over_time_axes(euler, axes[2], max_path_length)
 plot_lin_velocity_otime_axes(linear_speed, axes[3], max_path_length)
+[plt.plot(yaw_ref) for yaw_ref in yaw_reference]
+#plot_ndes_over_time_axes(ndes, axes[4], max_path_length)
+
 plt.tight_layout()
 plt.show()
 

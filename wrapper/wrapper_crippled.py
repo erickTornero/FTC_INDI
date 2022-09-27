@@ -26,6 +26,7 @@ class QuadrotorEnvRos(WrapperROSQuad):
         
         faulted_actions = self.mask * action
 
+        #super(QuadrotorEnvRos, self).step(faulted_actions, targetpos)
         return super(QuadrotorEnvRos, self).step(faulted_actions, targetpos)
         
 

@@ -13,8 +13,8 @@ class AllocationAttINDI:
         self.mass = parameters.mass
         self.k = parameters.k0
         self.t = parameters.t0 * self.k
-        self.beta = np.arctan(parameters.b/self.l)
-        self.double_rotor = True
+        self.beta = np.arctan(parameters.b/self.l)              # 45 degrees
+        self.double_rotor = False#True
         self.DRF_enable = parameters.DRF_enable
 
     def __call__(self, state, nu, ddY, h0, zdd, U0, rdot):
@@ -37,13 +37,13 @@ class AllocationAttINDI:
         ])/ self.ix
 
         Gq = np.array([
-            self.k * self.b * np.cos(self.beta), 
-            self.k * self.b * np.cos(self.beta), 
-            -self.k * self.b * np.cos(self.beta), 
-            -self.k * self.b * np.cos(self.beta)
+            self.k * self.b * cos(self.beta), 
+            self.k * self.b * cos(self.beta), 
+            -self.k * self.b * cos(self.beta), 
+            -self.k * self.b * cos(self.beta)
         ]) / self.iy
 
-        Gr = np.array([self.t, -self.t, self.t, -self.t]) / self.iz
+        Gr = -np.array([self.t, -self.t, self.t, -self.t]) / self.iz
         
         G0 = np.array([
             -(self.k/self.mass) * cos(theta) * cos(phi) * np.ones(4), 

@@ -82,6 +82,13 @@ class Trajectory:
             y[init_pulse:end_pulse]  =   0.0
             z[init_pulse:end_pulse]  =   z_bias
 
+        elif wave == 'high-speed':
+            x   =   np.zeros_like(t, dtype=np.float32)
+            y   =   np.zeros_like(t, dtype=np.float32)
+            z   =   np.ones_like(t, dtype=np.float32) * z_bias
+            i_step  =   (self.npoints//20)
+            x[i_step:]  =   16.0
+
         else:
             assert False, 'Trajectory not defined'
         

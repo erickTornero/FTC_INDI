@@ -20,7 +20,7 @@ def rollouts(
     save_paths=None,
     traj=None,
     initial_states=dict(pos=None,ang=None),
-    runn_all_steps=False,
+    run_all_steps=False,
     logger: Optional[Logger]=None,
     inject_failure=None
 ):
@@ -29,6 +29,7 @@ def rollouts(
     allow_inject    =   inject_failure['allow']
     push_failure_at =   None
     damaged_motor   =   -1 # -1 for non damaged
+    damaged_motor = 2
     if allow_inject:
         damaged_motor = inject_failure['damaged_motor_index']
         ffree_controller    =   HoverController()
@@ -50,7 +51,7 @@ def rollouts(
         print('Prepare for save paths in "{}"'.format(save_paths))
     
     logger.log('Initial states are Fixed!' if initial_states['pos'] is not None else 'Initial states are selected Randomly')
-    logger.log('Allowed to execute all t-steps' if runn_all_steps else 'Early stop activated')
+    logger.log('Allowed to execute all t-steps' if run_all_steps else 'Early stop activated')
     #env.set_targetpos(np.random.uniform(-1.0, 1.0, size=(3,)))
     cum_rewards =   []
     total_timesteps =   []
@@ -71,7 +72,7 @@ def rollouts(
             env.set_task(np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32))
             env.set_reward_function('type1')
         quadrotor_target = targetposition.copy()
-        quadrotor_target[1:] = -quadrotor_target[1:]
+        #quadrotor_target[1:] = -quadrotor_target[1:]
         env.set_targetpos(quadrotor_target)
         obs     = env.reset()
         #task    =   env.get_current_task()[1]
@@ -114,7 +115,8 @@ def rollouts(
             inputs.update_position_target(next_target_pos)
 
             #action = mpc.get_action_PDDM(stack_as, 0.6, 5)
-            action = controller(state, inputs)
+            #action = controller(state, inputs)
+            action = controller.get_action(obs, next_target_pos, env.last_observation)
             # Fix order of control signal
             tmp = action[3]
             action[3] = action[1]
@@ -122,7 +124,7 @@ def rollouts(
 
             next_obs, reward, done, env_info =   env.step(action, pos_invert_yz(next_target_pos))
 
-            if runn_all_steps: done=False
+            if run_all_steps: done=False
 
             #if save_paths is not None:
             observation = obs

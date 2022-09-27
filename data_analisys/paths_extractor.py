@@ -1,6 +1,5 @@
 import os
 import json
-from xmlrpc.client import boolean
 import joblib
 import numpy as np
 from wrapper import StateSpaceRobots
@@ -35,7 +34,7 @@ class PathsExtractor(BaseExtractor):
         return indexes
 
 
-    def _get_data(self, name: str, concat: bool):
+    def _get_data(self, name: str, concat: bool, is_in_matrix=False):
         """
             Get partial columns of data regarding the name
             @name: name of feature e.g. euler, position, etc
@@ -46,9 +45,10 @@ class PathsExtractor(BaseExtractor):
         for path in self.paths:
             try:
                 self.matrix =   path[name]
+                _data.append(self.matrix)
             except KeyError:
                 self.matrix =   path['observation']
-            _data.append(super(PathsExtractor,self)._get_data(name))
+                _data.append(super(PathsExtractor,self)._get_data(name))
         if concat: 
             return np.concatenate(_data, axis=0)
         return _data
@@ -85,6 +85,12 @@ class PathsExtractor(BaseExtractor):
     
     def get_row_actions(self, concat=False):
         return self._get_row_elements('actions', concat)
+
+    def get_ndes(self, concat=False):
+        return self._get_data('ndes', concat)
+
+    def get_yaw_speed_cmd(self, concat=False):
+        return self._get_data('yaw_speed_cmd', concat)
 
 if __name__ == "__main__":
     sp = PathsExtractor('data/sample16/offline_training/train_1/', 'rolls1')
