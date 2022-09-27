@@ -20,7 +20,7 @@ class Parameters:
             self.g = parameters['gravity']   #key -> g
 
             self.k0 = parameters['motor_constant']    # k0 key -> propeller thrust coefficient
-            self.t0 = parameters['moment_constant']    # t0 key -> torque coefficient
+            self.t0 = parameters['moment_constant'] * self.k0    # t0 key -> torque coefficient
             self.w_max = parameters['w_max']   # max / min propeller rotation rates, [rad/s]
             self.w_min = parameters['w_min']
 
@@ -51,7 +51,7 @@ class Parameters:
             self.k_lqr13    =   None
             self.DRF_enable =   parameters['DRF_enable']
             self.axis_tilt  =   parameters['axis_tilt']
-            self.YRC_Kp_r   =   parameters['yrc_kp_r']
+            self.YRC_Kp_r   =   parameters['YRC_Kp_r']
             self.YRC_Kp_psi = parameters['YRC_Kp_psi']
 
             # control params

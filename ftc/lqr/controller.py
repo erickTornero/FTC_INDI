@@ -42,7 +42,7 @@ class LQRController(BaseController):
         targetpos: np.ndarray, 
         obs_dict: Optional[Dict[str, np.ndarray]]=None
     ) -> np.ndarray:
-        targetpos = pos_invert_yz(targetpos)
+        #targetpos = pos_invert_yz(targetpos)
         if obs_dict is not None:
             self._state.update(obs_dict)
         else:
@@ -51,9 +51,9 @@ class LQRController(BaseController):
         self._inputs.update_position_target(targetpos)
         control_signal = self.__call__(self._state, self._inputs)
         # swap control signal
-        tmp = control_signal[3]
-        control_signal[3] = control_signal[1]
-        control_signal[1] = tmp
+        #tmp = control_signal[3]
+        #control_signal[3] = control_signal[1]
+        #control_signal[1] = tmp
 
         #control_signal[0] = control_signal[0] * -1
         return control_signal
@@ -78,8 +78,9 @@ class LQRController(BaseController):
         return self.flot_calculator(state, z_target, vzf_target)
 
     def init_controller(self, state0: State, inputs: Inputs, ct: float, damaged_motor=2):
-        """inputs = inputs.
-        position_target = pos_invert_yz(position_target)
+        #inputs = inputs.
+        position_target = np.array([inputs.xTarget, inputs.yTarget, inputs.zTarget])
+        #position_target = pos_invert_yz(position_target)
         # initialize state and inputs
         _state = State(invert_axis=True)
         _state.update_fail_id(damaged_motor)
@@ -94,7 +95,7 @@ class LQRController(BaseController):
 
         # derivators
         
-        self.z_target_derivator.start(states.position[2])
+        self.z_target_derivator.start(state0.position[2])
 
         #ssres = self.subsystem(states, n_des)
         
@@ -104,4 +105,4 @@ class LQRController(BaseController):
 
         self.ndes_list  =   []
         self.yaw_speed_cmd    =   []
-        """
+        

@@ -21,11 +21,11 @@ def get_lqr_matrix(parameters, fail_idx: Union[int, List[int]], DRF_enable: bool
         w_bar = np.ones((4, 1)) * 460
     elif type(fail_id) == int:
         r_bar = -(2 * (mod(fail_id, 2)) -1) * 20
-        w_bar   =   640 * np.ones((4, 1))
+        w_bar   =   838 * np.ones((4, 1))
         w_bar[fail_id] = 0
     elif type(fail_id) == list and len(fail_id) == 2:
         r_bar   =   (2 * (np.mod(np.sum(fail_id)/2, 2)) - 1) * 20
-        w_bar   =   640 * np.ones((4, 1))
+        w_bar   =   838 * np.ones((4, 1))
         w_bar[fail_id] = 0
     else:
         pass
@@ -56,7 +56,7 @@ def get_lqr_matrix(parameters, fail_idx: Union[int, List[int]], DRF_enable: bool
         [0, 0]
     ])
 
-    if type(fail_id) == list:
+    if hasattr(fail_id, '__len__'):
         if (np.sum(fail_id) < 3): # failure 0, 2
             B[:, 1] = 0
         elif type(fail_id) == int:
@@ -99,7 +99,7 @@ class FlotCalculator:
         self.mass       =   parameters.mass
 
     def __call__(self, state: State, z_ref: float, vz_ref: float) -> float:
-        az_des = self.kpz_pos * (z_ref - state.pos[2]) + \
+        az_des = self.kpz_pos * (z_ref - state.pos[2]) - \
         self.kdz_pos * (vz_ref - state.vel[2]) - self.g
         f_tot = - az_des * self.mass / np.cos(state.att[0]) / np.cos(state.att[1])
         return f_tot
@@ -113,20 +113,19 @@ class Mixer:
                 fail_id = [0, 2]
             else:
                 fail_id = [1, 3]
-        
-        fail_id = fail_id
 
         k0     =   parameters.k0
         t0     =   parameters.t0
-        s      =   parameters.s
+        s      =   parameters.s/2.0
         G0     =   np.array([
-            [0, -1, 0, 1],
-            [1, 0, -1, 0],
-            [1, 1, 1, 1],
-            [1, -1, 1, -1]
-        ])
+            [0, -1, 0, 1], # moment X
+            [1, 0, -1, 0], # moment Y
+            [1, 1, 1, 1],  # Sum Forces
+            [1, -1, 1, -1] # moment Z
+        ]) # torques
 
         G      =   np.matmul(np.diag([s * k0, s * k0, k0, t0]), G0)
+
         if type(fail_id) == int:
             if fail_id >= 0: G[:, fail_id] = 0#np.zeros((4, 1))
         elif hasattr(fail_id, '__len__'):
@@ -143,6 +142,7 @@ class Mixer:
         w2 = np.matmul(self.pinvG, U.reshape(-1, 1))
 
         w = np.sqrt(np.abs(w2)) * np.sign(w2)
+        w[0] = w[0] * 0.0
         w = np.clip(w, self.w_min, self.w_max)
         return w.flatten()
 
