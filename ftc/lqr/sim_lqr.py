@@ -168,6 +168,13 @@ if __name__ == "__main__":
     kt = 0.016
     damping = 2.75e-3
     l_arm = 0.17
+    w_max = 838
+    print("\n")
+    print(f"max rotor ang speed: {w_max}rad/s")
+    print(f"max force per rotor: {kf*w_max**2:.2f}N")
+    print(f"max Torque Z per rotor: {kt*kf*w_max**2:.4f}Nm")
+    print(f"weight: {mass*9.81:.3f}N")
+    print("\n")
 
     fig, (axs_n, axs_wb) = plt.subplots(2, 1)
     ps = np.linspace(0.0, 4.0, 100)

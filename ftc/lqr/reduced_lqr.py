@@ -76,7 +76,10 @@ class ReducedAttitudeController:
         Muv = - np.matmul(self.K_lqr, np.array([u - self.u0, v - self.v0, eta[0, 0], eta[1, 0], Muv0[0, 0], Muv0[1, 0]]).reshape(-1, 1))
 
         T_ref = f_ref
-        Mz_ref = -self.yrc_kp_r * (r - r_cmd) * self.Iz
+        #Mz_ref = self.yrc_kp_r * (r - r_cmd) * self.Iz
+        #Mz_ref = self.yrc_kp_r * r # improved computation of the momment z #improve
+        #must be computed with damping
+        Mz_ref = 2.75e-3 * r
 
         U = np.zeros(4)
         U[0] = Muv[0, 0]

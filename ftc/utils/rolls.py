@@ -29,7 +29,8 @@ def rollouts(
     allow_inject    =   inject_failure['allow']
     push_failure_at =   None
     damaged_motor   =   -1 # -1 for non damaged
-    damaged_motor = 2
+    damaged_motor   =   inject_failure['damaged_motor_index']
+    print(f"damaged motor: {damaged_motor}")
     if allow_inject:
         damaged_motor = inject_failure['damaged_motor_index']
         ffree_controller    =   HoverController()

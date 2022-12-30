@@ -9,23 +9,23 @@ from ..utils.state import State
 def get_lqr_matrix(parameters, fail_idx: Union[int, List[int]], DRF_enable: bool):
     if DRF_enable and fail_idx>=0:
         if fail_idx == 0 or fail_idx == 2:
-            fail_id = [0, 2];
+            fail_id = [0, 2]
         elif fail_idx == 1 or fail_idx == 3:
-                fail_id = [1, 3];
+                fail_id = [1, 3]
     else:
         fail_id = fail_idx;
 
     # no failure
     if fail_id == -1:
         r_bar = 0
-        w_bar = np.ones((4, 1)) * 460
+        w_bar = np.ones((4, )) * 460
     elif type(fail_id) == int:
-        r_bar = -(2 * (mod(fail_id, 2)) -1) * 20
-        w_bar   =   838 * np.ones((4, 1))
+        r_bar = (2 * (mod(fail_id, 2)) -1) * 20
+        w_bar   =   838 * np.ones((4, ))
         w_bar[fail_id] = 0
     elif type(fail_id) == list and len(fail_id) == 2:
         r_bar   =   (2 * (np.mod(np.sum(fail_id)/2, 2)) - 1) * 20
-        w_bar   =   838 * np.ones((4, 1))
+        w_bar   =   838 * np.ones((4, ))
         w_bar[fail_id] = 0
     else:
         pass
@@ -39,8 +39,8 @@ def get_lqr_matrix(parameters, fail_idx: Union[int, List[int]], DRF_enable: bool
     Ip  =   parameters.Ip
     k   =   parameters.act_dyn
 
-    a   =   Au * r_bar - Ip * (w_bar[0, 0] - w_bar[1, 0] + w_bar[2, 0] - w_bar[3, 0])/Iu
-    b   =   Av * r_bar + Ip * (w_bar[0, 0] - w_bar[1, 0] + w_bar[2, 0] - w_bar[3, 0])/Iv
+    a   =   Au * r_bar - Ip * (w_bar[0] - w_bar[1] + w_bar[2] - w_bar[3])/Iu
+    b   =   Av * r_bar + Ip * (w_bar[0] - w_bar[1] + w_bar[2] - w_bar[3])/Iv
 
     A   =   np.array([
         [0, a, 0, 0],
@@ -117,12 +117,20 @@ class Mixer:
         k0     =   parameters.k0
         t0     =   parameters.t0
         s      =   parameters.s/2.0
+        """
         G0     =   np.array([
             [0, -1, 0, 1], # moment X
             [1, 0, -1, 0], # moment Y
-            [1, 1, 1, 1],  # Sum Forces
-            [1, -1, 1, -1] # moment Z
+            [1, 1, 1, 1],  # Sum Forces ...ok
+            [1, -1, 1, -1] # moment Z ...ok
         ]) # torques
+        """
+        G0  =   np.array([
+            [0, 1, 0, -1], # moment X
+            [-1, 0, 1, 0], # moment Y
+            [1, 1, 1, 1],  # Sum Forces ...ok
+            [1, -1, 1, -1] # moment Z ...ok
+        ])
 
         G      =   np.matmul(np.diag([s * k0, s * k0, k0, t0]), G0)
 
@@ -141,8 +149,8 @@ class Mixer:
         w = np.zeros(4)
         w2 = np.matmul(self.pinvG, U.reshape(-1, 1))
 
-        w = np.sqrt(np.abs(w2)) * np.sign(w2)
-        w[0] = w[0] * 0.0
+        w = np.sqrt(np.abs(w2))# * np.sign(w2) #TODO: Fix
+        w[0] = w[0] * 0.0 #TODO: why? idx=0 must be the index
         w = np.clip(w, self.w_min, self.w_max)
         return w.flatten()
 

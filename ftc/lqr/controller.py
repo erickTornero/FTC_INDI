@@ -12,7 +12,7 @@ from ftc.lqr.calculate_lqr import Mixer, get_lqr_matrix, FlotCalculator
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
 from ftc.lqr.poscontrol import PositionControl
-from ftc.indi.functions.yawcontrol import URYawControl
+from ftc.lqr.yawcontrol import yaw_controller
 class LQRController(BaseController):
     def __init__(self, parameters: Parameters, T_sampling:float=None, state_space: Optional[StateSpaceRobots]=None):
         self.T_sampling = T_sampling
@@ -67,7 +67,7 @@ class LQRController(BaseController):
 
     def outer_controller(self, state: State, inputs: Inputs):
         n_des, self.errorInt = PositionControl(inputs, state, self.parameters, self.errorInt)
-        r_cmd = URYawControl(inputs, state, self.parameters)
+        r_cmd = yaw_controller(inputs, state, self.parameters)
         return n_des, r_cmd
 
 
