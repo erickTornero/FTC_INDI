@@ -11,7 +11,7 @@ from wrapper.state_space import StateSpaceRobots
 from ftc.lqr.calculate_lqr import Mixer, get_lqr_matrix, FlotCalculator
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
-from ftc.indi.functions.poscontrol import URPositionControl
+from ftc.lqr.poscontrol import PositionControl
 from ftc.indi.functions.yawcontrol import URYawControl
 class LQRController(BaseController):
     def __init__(self, parameters: Parameters, T_sampling:float=None, state_space: Optional[StateSpaceRobots]=None):
@@ -66,7 +66,7 @@ class LQRController(BaseController):
         return self.mixer(U_lqr)
 
     def outer_controller(self, state: State, inputs: Inputs):
-        n_des, self.errorInt = URPositionControl(inputs, state, self.parameters, self.errorInt)
+        n_des, self.errorInt = PositionControl(inputs, state, self.parameters, self.errorInt)
         r_cmd = URYawControl(inputs, state, self.parameters)
         return n_des, r_cmd
 
@@ -74,7 +74,7 @@ class LQRController(BaseController):
     def _get_flot_lqr(self, state: State, inputs: Inputs) -> float:
         z_target = inputs.zTarget
         zf_target = self.z_target_filter(z_target)
-        vzf_target = self.z_target_derivator(zf_target)
+        vzf_target = self.z_target_derivator(zf_target) # not working well #Check initial, recently changed
         return self.flot_calculator(state, z_target, vzf_target)
 
     def init_controller(self, state0: State, inputs: Inputs, ct: float, damaged_motor=2):
@@ -82,7 +82,7 @@ class LQRController(BaseController):
         position_target = np.array([inputs.xTarget, inputs.yTarget, inputs.zTarget])
         #position_target = pos_invert_yz(position_target)
         # initialize state and inputs
-        _state = State(invert_axis=True)
+        _state = State(invert_axis=False)  # Duplicated state, tends to error
         _state.update_fail_id(damaged_motor)
         _input = Inputs()
         _input.update_position_target(position_target)
@@ -95,7 +95,8 @@ class LQRController(BaseController):
 
         # derivators
         
-        self.z_target_derivator.start(state0.position[2])
+        #self.z_target_derivator.start(state0.position[2]) # should be input
+        self.z_target_derivator.start(inputs.zTarget) # should be input
 
         #ssres = self.subsystem(states, n_des)
         

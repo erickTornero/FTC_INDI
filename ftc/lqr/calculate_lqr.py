@@ -99,9 +99,9 @@ class FlotCalculator:
         self.mass       =   parameters.mass
 
     def __call__(self, state: State, z_ref: float, vz_ref: float) -> float:
-        az_des = self.kpz_pos * (z_ref - state.pos[2]) - \
-        self.kdz_pos * (vz_ref - state.vel[2]) - self.g
-        f_tot = - az_des * self.mass / np.cos(state.att[0]) / np.cos(state.att[1])
+        az_des = self.kpz_pos * (z_ref - state.pos[2]) + \
+        self.kdz_pos * (vz_ref - state.vel[2]) + self.g #TODO: possible must add g
+        f_tot = az_des * self.mass / np.cos(state.att[0]) / np.cos(state.att[1])
         return f_tot
 
 class Mixer:

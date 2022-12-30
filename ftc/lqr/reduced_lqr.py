@@ -57,8 +57,8 @@ class ReducedAttitudeController:
         psi = state.att[2]
         tmp = np.matmul(self.R_xy_uv, np.array([state.omegaf[0], state.omegaf[1]]).reshape(-1, 1))
 
-        u = tmp[0, 0]
-        v = tmp[1, 0]
+        u = tmp[0, 0] # u1
+        v = tmp[1, 0] # u2
         r = state.omegaf[2]
 
         R_IB = np.array([
@@ -70,7 +70,7 @@ class ReducedAttitudeController:
         h = np.linalg.solve(R_IB, n_des)
         eta = np.matmul(self.R_xy_uv, h[:2].reshape(-1, 1))
 
-        w_speeds = state.w_speeds
+        w_speeds = state.w_speeds # s: 0.34?
         Muv0 = self.k0 * self.s * np.array([[w_speeds[3]**2 - w_speeds[1]**2], [w_speeds[0]**2 - w_speeds[2]**2]])
 
         Muv = - np.matmul(self.K_lqr, np.array([u - self.u0, v - self.v0, eta[0, 0], eta[1, 0], Muv0[0, 0], Muv0[1, 0]]).reshape(-1, 1))
@@ -81,8 +81,8 @@ class ReducedAttitudeController:
         U = np.zeros(4)
         U[0] = Muv[0, 0]
         U[1] = Muv[1, 0]
-        U[2] = T_ref
-        U[3] = Mz_ref
+        U[2] = T_ref            # total sum of force
+        U[3] = Mz_ref           # total moment
         return U
 
 if __name__ == "__main__":

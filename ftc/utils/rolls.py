@@ -83,7 +83,8 @@ def rollouts(
 
         running_paths=dict(observations=[], actions=[], rewards=[], dones=[], next_obs=[], target=[])
 
-        state = State(invert_axis=True)
+        #state = State(invert_axis=True)
+        state = State(invert_axis=False)
         state.update(env.last_observation)
         if damaged_motor >= 0: state.update_fail_id(damaged_motor)
         inputs = Inputs()
@@ -117,12 +118,12 @@ def rollouts(
             #action = mpc.get_action_PDDM(stack_as, 0.6, 5)
             #action = controller(state, inputs)
             action = controller.get_action(obs, next_target_pos, env.last_observation)
-            # Fix order of control signal
-            tmp = action[3]
-            action[3] = action[1]
-            action[1] = tmp
+            #TODO: Fix order of control signal
+            #tmp = action[3]
+            #action[3] = action[1]
+            #action[1] = tmp
 
-            next_obs, reward, done, env_info =   env.step(action, pos_invert_yz(next_target_pos))
+            next_obs, reward, done, env_info =   env.step(action, next_target_pos)#pos_invert_yz(next_target_pos)) TODO, checking without inverting next
 
             if run_all_steps: done=False
 
