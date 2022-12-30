@@ -77,7 +77,7 @@ class Parameters:
             self.g = parameters['gravity']   #key -> g
 
             self.k0 = parameters['motor_constant']    # k0 key -> propeller thrust coefficient
-            self.t0 = parameters['moment_constant']    # t0 key -> torque coefficient
+            self.t0 = parameters['moment_constant'] * self.k0    # t0 key -> torque coefficient
             self.w_max = parameters['w_max']   # max / min propeller rotation rates, [rad/s]
             self.w_min = parameters['w_min']
 

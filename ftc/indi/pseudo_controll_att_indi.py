@@ -4,6 +4,8 @@
 import numpy as np
 from math import sin, cos
 from ftc.indi.parameters import Parameters
+import rospy
+from std_msgs.msg import Float32MultiArray, Float32
 
 class PseudoControllAttINDI:
     def __init__(self, parameters: Parameters):
@@ -18,7 +20,22 @@ class PseudoControllAttINDI:
         self.katt_d = parameters.att_d_gain
         self.kpr = parameters.YRC_Kp_r
 
-    def __call__(self, state, n_des, lambda_, nB, r_ref, Z_ref, Vz_ref):
+        self.nb_pub = rospy.Publisher('/mydata/nb', Float32MultiArray, queue_size=10)
+        self.nb_x = rospy.Publisher('/mydata/nbx', Float32, queue_size=10)
+        self.nb_y = rospy.Publisher('/mydata/nby', Float32, queue_size=10)
+        self.nb_z = rospy.Publisher('/mydata/nbz', Float32, queue_size=10)
+
+        self.lambda_x = rospy.Publisher('/mydata/lambda_x', Float32, queue_size=10)
+        self.lambda_y = rospy.Publisher('/mydata/lambda_y', Float32, queue_size=10)
+        self.lambda_z = rospy.Publisher('/mydata/lambda_z', Float32, queue_size=10)
+
+        self.diff_x = rospy.Publisher('/mydata/dx', Float32, queue_size=10)
+        self.diff_y = rospy.Publisher('/mydata/dy', Float32, queue_size=10)
+
+        self.y2_pub = rospy.Publisher('/mydata/y2', Float32, queue_size=10)
+        self.n1_pub = rospy.Publisher('/mydata/n1', Float32, queue_size=10)
+
+    def __call__(self, state, n_des, lambda_, nB, r_ref, Z_ref, Vz_ref, h):
         phi = state.att[0]
         theta = state.att[1]
         psi = state.att[2]
@@ -35,6 +52,8 @@ class PseudoControllAttINDI:
         nx = nB[0]
         ny = nB[1]
 
+        
+
         chi = self.chi
         if state.fail_id == 0 or state.fail_id == 2: 
             chi = np.pi - self.chi
@@ -46,22 +65,52 @@ class PseudoControllAttINDI:
             [np.sin(psi) * np.cos(theta) , np.sin(psi) * np.sin(theta) * np.sin(phi) + np.cos(psi) * np.cos(phi), np.sin(psi) * np.sin(theta) * np.cos(phi) - np.cos(psi) * np.sin(phi)],
             [-np.sin(theta), np.cos(theta) * np.sin(phi), np.cos(theta) * np.cos(phi)]
         ])
-        #h = np.matmul(np.linalg.inv(Rib), n_des)
-        h = np.linalg.lstsq(Rib, n_des)[0].flatten()
 
+        ##
+        #nB = np.matmul(Rib, np.reshape(nB, (-1,1)))
+        nB = nB.flatten()
+        nx = nB[0]
+        ny = nB[1]
+        nz = nB[2]
+
+        ## publisher
+        self.nb_x.publish(Float32(nx))
+        self.nb_y.publish(Float32(ny))
+        self.nb_z.publish(Float32(nz))
+
+        self.lambda_x.publish(Float32(lambda_[0]))
+        self.lambda_y.publish(Float32(lambda_[1]))
+        self.lambda_z.publish(Float32(lambda_[2]))
+        ##
+        #h = np.matmul(np.linalg.inv(Rib), n_des)
+        #h = np.linalg.lstsq(Rib, n_des)[0].flatten()
+        #h = np.linalg.solve(Rib, n_des)
         h1, h2, h3 = h[0], h[1], h[2]
 
         Y = np.array([[h1 - nx], [h2 - ny]])
 
+        # publish
+        self.diff_x.publish(Float32(Y[0,0]))
+        self.diff_y.publish(Float32(Y[1,0]))
+
+        # check equation 43
         dY = np.array([
             [-h3 * q + h2 * r + lambda_[0]],
             [h3 * p - h1 * r + lambda_[1]]
         ])
 
+        # y2 = h1 * cos(X) + h2 * sin(X) -> X: chi
+        # n1 = -h1 * sin(X) + h2 * cos(X) -> X: chi
         local_mat = np.array([
                         [cos(chi), sin(chi)], 
                         [-sin(chi), cos(chi)]
                     ])
+        # publish
+        S = np.matmul(local_mat, np.array([[h1], [h2]]))
+        self.y2_pub.publish(Float32(S[0,0]))
+        self.n1_pub.publish(Float32(S[1,0]))
+        ##
+
         Y = np.matmul(local_mat, Y)
         dY = np.matmul(local_mat, dY)
 

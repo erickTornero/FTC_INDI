@@ -7,6 +7,8 @@ from ftc.indi.pseudo_controll_att_indi import PseudoControllAttINDI
 from ftc.utils.filters import LowpassFilter
 from ftc.indi.parameters import Parameters
 from math import sin, cos
+import rospy
+from std_msgs.msg import Float32
 
 from wrapper.state_space import StateSpaceRobots
 from ..base_controller import BaseController
@@ -21,9 +23,12 @@ class INDIController(BaseController):
         self.errorInt = np.zeros(3, dtype=np.float32)
         #self.parameters = parameters
         #Low pass Filters
+        
         self.low_pass_ndes = LowpassFilter(1, parameters.t_indi, T_sampling)
         self.low_pass_zTarg = LowpassFilter(1, parameters.t_indi, T_sampling)
         self.low_pass_dY = LowpassFilter(1, parameters.t_indi, T_sampling)
+
+        self.low_pass_lambda = LowpassFilter(1, parameters.t_indi, T_sampling)
 
         #Saturators
         self.saturator_w = Saturator(parameters.w_min, parameters.w_max)
@@ -43,6 +48,14 @@ class INDIController(BaseController):
         self.state_space = state_space
         #self.derivator_z.start(-6, start_time) #TODO: hardcoded
 
+        self.ndes_x_pub = rospy.Publisher('/mydata/ndes_x', Float32, queue_size=1_0)
+        self.ndes_y_pub = rospy.Publisher('/mydata/ndes_y', Float32, queue_size=1_0)
+        self.ndes_z_pub = rospy.Publisher('/mydata/ndes_z', Float32, queue_size=10)
+
+        self.ndesf_x_pub = rospy.Publisher('/mydata/ndesf_x', Float32, queue_size=10)
+        self.ndesf_y_pub = rospy.Publisher('/mydata/ndesf_y', Float32, queue_size=10)
+        self.ndesf_z_pub = rospy.Publisher('/mydata/ndesf_z', Float32, queue_size=10)
+
     def get_action(
         self, 
         obs: np.ndarray, 
@@ -61,11 +74,15 @@ class INDIController(BaseController):
         tmp = control_signal[3]
         control_signal[3] = control_signal[1]
         control_signal[1] = tmp
+
+        #control_signal[0] = control_signal[0] * -1
         return control_signal
 
-    def __call__(self, state: State, inputs: Inputs):
+    def __call__(self, state: State, inputs: Inputs): 
         n_des, r_cmd = self.outer_controller(state, inputs)
         w_cmd = self.inner_controller(state, inputs, n_des, r_cmd)
+        self.ndes_list.append(n_des)
+        self.yaw_speed_cmd.append(r_cmd)
         return w_cmd.flatten()
 
     def outer_controller(self, state: State, inputs: Inputs):
@@ -80,19 +97,32 @@ class INDIController(BaseController):
         h0, posdd, U0, U1 = ssres['h0'], ssres['posdd'], ssres['U0'], ssres['U1']
         if posdd > 10000:
             import pdb; pdb.set_trace()
-            x = 32
+        x = 32
 
         #pseudo controll att indi
         n_des_f = self.low_pass_ndes(n_des, Tc)
         _lambda = self.derivator_ndes(n_des_f, Tc)
         _lambda = self.saturator_lambda(_lambda)
 
+        _lambda = self.low_pass_lambda(_lambda)
+
+        ##
+        # publishers
+        self.ndes_x_pub.publish(Float32(n_des[0]))
+        self.ndes_y_pub.publish(Float32(n_des[1]))
+        self.ndes_z_pub.publish(Float32(n_des[2]))
+
+        self.ndesf_x_pub.publish(Float32(n_des_f[0]))
+        self.ndesf_y_pub.publish(Float32(n_des_f[1]))
+        self.ndesf_z_pub.publish(Float32(n_des_f[2]))
+        ##
+
         nB = self._getnB(state.fail_id)
         Z_ref = inputs.zTarget
         Z_ref_f = self.low_pass_zTarg(Z_ref, Tc)
         Vz_ref = self.derivator_z(Z_ref_f, Tc)
 
-        nu, dY, Y = self.pseudo_controll_att(state, n_des_f, _lambda, nB, r_sp, Z_ref, Vz_ref)
+        nu, dY, Y = self.pseudo_controll_att(state, n_des_f, _lambda, nB, r_sp, Z_ref, Vz_ref, h0.flatten())
 
         ## Allocation Attitude Indi
         dY_f = self.low_pass_dY(dY, Tc)
@@ -102,6 +132,7 @@ class INDIController(BaseController):
 
         w_cmd = self._U2Omega(U)
         w_cmd = self.saturator_w(w_cmd)
+        
         return w_cmd
 
     def _U2Omega(self, U):
@@ -153,12 +184,16 @@ class INDIController(BaseController):
         self.derivator_dY.start(0, t)
         n_des, _ = self.outer_controller(states, inputs)
         self.low_pass_ndes.start(n_des, t)
+        self.low_pass_lambda.start(n_des, t)
         self.derivator_ndes.start(n_des, t)
         #ssres = self.subsystem(states, n_des)
         
         #h0, posdd, U0, U1 = ssres['h0'], ssres['posdd'], ssres['U0'], ssres['U1']
         self._state = states
         self._inputs = inputs
+
+        self.ndes_list  =   []
+        self.yaw_speed_cmd    =   []
 
 
 
@@ -215,7 +250,8 @@ class Subsystem:
             [-sin(theta), cos(theta) * sin(phi), cos(theta) * cos(phi)]
         ])
 
-        h = np.linalg.lstsq(R_IB, n_des.reshape(-1, 1))[0]
+        #h = np.linalg.lstsq(R_IB, n_des.reshape(-1, 1))[0]
+        h = np.linalg.solve(R_IB, n_des.reshape(-1,1))
         return h
     
     def _posdd2Estimator(self, az, att):
