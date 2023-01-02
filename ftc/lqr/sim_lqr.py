@@ -14,6 +14,9 @@ def get_forces(
     failed_id: int,
     nz: float
 ) -> np.ndarray:
+    """
+        Get total forces in vector given a failed rotor
+    """
     safe_ids, opposite_safe = get_indexes(failed_id)
     f = (mass * g)/(nz * (2 + p))
     mask = np.zeros(4)
@@ -81,23 +84,66 @@ def get_wb(n: np.ndarray, yaw_speed: float) -> np.ndarray:
     wby = yaw_speed * ny/nz
     return np.array([wbx, wby, yaw_speed])
 
-def solve(mass, g, p, kt, kf, dump, l_arm, izzt, ixxt, izzp):
+def solve(mass, g, p, kt, kf, dump, l_arm, izzt, ixxt, izzp, fail_rotor=4):
+    """
+        Fail rotor from [1 to 4]
+    """
     from scipy.optimize import fsolve
-    def func(x):
+    """
+        x[0]: fb where sum forces must always be: (2+p)fb # correspond to a failed-free rotor
+        x[1]: nz
+        x[2]: r_bar
+        x[3]: wi // wi == (wi+2), wi+1 = p*wi # correspond to a failed-free rotor
+        x[4]: nx_bar 
+        x[5]: ny_bar
+        x[6]: p_bar
+        x[7]: q_bar
+        x[8]: e, from equation 16 where n_bar = e * [p_bar, q_bar, r_bar]
+    """
+    def func_rotor_4(x):
+        """
+        if rotor 4 fails
+        """
+        return [
+            x[0] * x[1] * (2 + p) - mass * g,           # .. from equation (18)
+            x[2] - (kt * kf * (2 - p)/dump) * x[3]**2,  # ...from equation (21), this depends on which rotor fails (2 - p) for [w2 or w4] and (p-2) for [w1 or w4] failed
+            x[0] - kf * x[3]**2,                        #from equation (10) fi = kf *wi^2
+            x[4] - x[8] * x[6],                         #from equation (16), nx = e * p_bar
+            x[5] - x[8] * x[7],                         #from equation (16), ny = e * q_bar
+            x[1] - x[8] * x[2],                         #from equation (16), nz = e * r_bar
+            x[4]**2 + x[5]**2 + x[1]**2 - 1,            #from equation (17) .. independent from which rotor fails
+            x[6], #assumption: p_bar=0
+            #x[4], ...#TODO: fix x0
+            #p * x[0] * l_arm - (izzt - ixxt) * x[7] * x[2] - izzp * x[7] * (2 + np.sqrt(p)) * x[3],
+            p * x[0] * l_arm - (izzt - ixxt) * x[7] * x[2] - izzp * x[7] * (2 + np.sqrt(p)) * x[3], # from equation 12
+        ]
+
+    def func_rotor_3(x):
+        """
+        if rotor 3 fails
+        """
         return [
             x[0] * x[1] * (2 + p) - mass * g,
-            x[2] - (kt * kf * (2 - p)/dump) * x[3]**2,
+            #x[2] - (kt * kf * (p - 2)/dump) * x[3]**2,
+            x[2] - (kt * (p - 2)/dump) * x[0],
             x[0] - kf * x[3]**2,
             x[4] - x[8] * x[6],
             x[5] - x[8] * x[7],
             x[1] - x[8] * x[2],
-            x[4]**2 + x[5]**2 + x[1]**2 - 1,
-            x[6],
-            #x[4],
-            p * x[0] * l_arm - (izzt - ixxt) * x[7] * x[2] - izzp * x[7] * (2 + np.sqrt(p)) * x[3],
+            #x[4]**2 + x[5]**2 + x[1]**2 - 1,
+            np.linalg.norm(np.array([x[4], x[5], x[1]])) - 1,
+            x[7],
+            -p * x[0] * l_arm + (izzt - ixxt) * x[6] * x[2] + izzp * x[6] * (2 + np.sqrt(p)) * x[3],#from equation 13
         ]
-    root = fsolve(func, [2.0, 0.9, 20, 500, 0.0, 0.0, 0.0, 2.0, 0.02])
-    return root, func(root)
+    if fail_rotor == 4:
+        root = fsolve(func_rotor_4, [2.0, 0.9, 20, 500, 0.0, 0.0, 0.0, 2.0, 0.02])
+        res = func_rotor_4(root)
+    elif fail_rotor == 3:
+        root = fsolve(func_rotor_3, [2.0, 0.9, -20, 500, 0.0, 0.0, 0.0, 0.0, 0.02])
+        res = func_rotor_4(root)
+    else:
+        raise NotImplementedError(f"rotor id {fail_rotor} not implemented yet")
+    return root, res
 if __name__ == "__main__":
     p = 0.655
     nz = 0.98
@@ -127,13 +173,16 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--p', '-p', type=float, dest='p',default=0.0)
+    parser.add_argument('--failed-rotor', '-fr', type=int, dest='failed_rotor', default=4)
     args = parser.parse_args()
     p = args.p
+    failed_rotor = args.failed_rotor
+    assert failed_rotor in [1, 2, 3, 4], 'Index of rotor not supported!'
     print("using p={:.3f}".format(p))
 
-    get_params(p, nz, mass, gravity, failed_id, kf, kt, damping)
+    get_params(p, nz, mass, gravity, failed_rotor, kf, kt, damping)
 
-    root, cl = solve(mass, gravity, p, kt, kf, damping, l_arm, izzt, ixxt, izzp)
+    root, cl = solve(mass, gravity, p, kt, kf, damping, l_arm, izzt, ixxt, izzp, failed_rotor)
     n = [root[4], root[5], root[1]]
     forces = [root[0], p * root[0], root[0], 0.0]
     wb = [root[6], root[7], root[2]]
@@ -191,7 +240,8 @@ if __name__ == "__main__":
             l_arm, 
             izzt, 
             ixxt, 
-            izzp
+            izzp,
+            failed_rotor,
         )
         nx, ny, nz = root[4], root[5], root[1]
         wbx, wby, wbz = root[6], root[7], root[2]
