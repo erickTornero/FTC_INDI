@@ -222,6 +222,8 @@ class ReducedAttitudeControllerImproved:
                 #self.equilibrium_state.f1 + self.equilibrium_state.f2 + self.equilibrium_state.f3 + self.equilibrium_state.f4
             ]).reshape(-1, 1)
         ).flatten()
+        if np.abs(r) <= 15.0:
+            f1 = 0.0 #set to zero if w_r is less than 10rad/s according to the paper ... seems work
         return np.array([f1, f2, 0, f4])
         
         return U
