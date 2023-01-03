@@ -8,3 +8,5 @@ def yaw_controller(inputs, state, par):
                 -sin(state.att[0])*state.omegaf[1]
 
     return r_cmd
+
+#TODO: check attitude calculation 

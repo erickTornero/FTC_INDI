@@ -1,14 +1,14 @@
 from typing import Dict, Optional
 import numpy as np
 from ftc.indi.controller import DiscreteTimeDerivative
-from ftc.lqr.reduced_lqr import ReducedAttitudeController
+from ftc.lqr.reduced_lqr import ReducedAttitudeController, ReducedAttitudeControllerImproved
 
 from ftc.utils.filters import LowpassFilter
 from ftc.utils.transforms import pos_invert_yz
 from ftc.base_controller import BaseController
 from ftc.lqr.parameters import Parameters
 from wrapper.state_space import StateSpaceRobots
-from ftc.lqr.calculate_lqr import Mixer, get_lqr_matrix, FlotCalculator
+from ftc.lqr.calculate_lqr import Mixer, get_lqr_matrix, FlotCalculator, get_lqr_matrix_improved
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
 from ftc.lqr.poscontrol import PositionControl
@@ -24,6 +24,8 @@ class LQRController(BaseController):
         self.parameters.k_lqr1 = get_lqr_matrix(parameters, 1, False)
         self.parameters.k_lqr2 = get_lqr_matrix(parameters, 2, False)
         self.parameters.k_lqr3 = get_lqr_matrix(parameters, 3, False)
+        #self.parameters.k_lqr2 = get_lqr_matrix_improved(parameters, 2, 0.5)
+        #self.parameters.k_lqr3 = get_lqr_matrix_improved(parameters, 3, 0.5)
         # double rotor failure
         self.parameters.k_lqr02 = get_lqr_matrix(parameters, 0, True)
         self.parameters.k_lqr13 = get_lqr_matrix(parameters, 1, True)
@@ -31,7 +33,8 @@ class LQRController(BaseController):
         self.z_target_filter   = LowpassFilter(1, parameters.t_filter, T_sampling)
         self.z_target_derivator =   DiscreteTimeDerivative(T_sampling)
         self.flot_calculator    =   FlotCalculator(parameters)
-        self.reduced_att_controller =   ReducedAttitudeController(parameters)
+        #self.reduced_att_controller =   ReducedAttitudeController(parameters)
+        self.reduced_att_controller =   ReducedAttitudeControllerImproved(parameters)
         self.mixer                  =   Mixer(parameters)
 
         self.errorInt = np.zeros(3, dtype=np.float32)

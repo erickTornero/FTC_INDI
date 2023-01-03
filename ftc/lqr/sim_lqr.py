@@ -1,5 +1,6 @@
 import numpy as np
 from typing import Tuple
+from scipy.optimize import fsolve
 
 def get_n(nz: float) -> np.ndarray:
     assert np.abs(nz) <= 1.0, "invalid value of nz"
@@ -84,13 +85,92 @@ def get_wb(n: np.ndarray, yaw_speed: float) -> np.ndarray:
     wby = yaw_speed * ny/nz
     return np.array([wbx, wby, yaw_speed])
 
+def solve_generic(
+    *,
+    mass: float,
+    gravity: float,
+    alpha: float,
+    kt: float,
+    kf: float,
+    dumping: float,
+    length_arm: float,
+    izzt: float,
+    ixxt: float,
+    izzp: float,
+    fail_rotor: int
+):
+    
+    """
+        x[0]: nx
+        x[1]: ny
+        x[2]: nz
+        x[3]: f1
+        x[4]: f2
+        x[5]: f3
+        x[6]: f4
+        x[7]: sF
+        x[8]: E
+        x[9]: p
+        x[10]: q
+        x[11]: r
+        x[12]: w1
+        x[13]: w2
+        x[14]: w3
+        x[15]: w4
+    """
+    # general equations, i.e independent from which rotor is failed
+    def get_equations(failed_rotor: int, alpha_ratio):
+        def system_dynamics(x):
+            general_eqs = [
+                x[7] * x[2] - mass * gravity,   # from equation #1 ..reference in paper (18)
+                x[0] - x[8] * x[9],             # from equation #2 ..reference paper (16)
+                x[1] - x[8] * x[10],            # from equation #3
+                x[2] - x[8] * x[11],            # from equation #4
+                x[11] - (kf*kt/dumping) * (x[12]**2 - x[13]**2 + x[14]**2 - x[15]**2), # from equation #5 ..reference in paper (21)
+                kf * (x[13]**2 - x[15]**2) * length_arm - (izzt - ixxt) * x[10] * x[11] - izzp * x[9] * (x[12] + x[13] + x[14] + x[15]), # from equation #6 ..reference in paper (12)
+                kf * (x[14]**2 - x[12]**2) * length_arm + (izzt - ixxt) * x[9] * x[11] + izzp * x[9] * (x[12] + x[13] + x[14] + x[15]), # from equation #7 ..reference in paper (13)
+                x[3] - kf * x[12]**2,           # from equation #8 ..reference in paper (10)
+                x[4] - kf * x[13]**2,           # from equation #9   ""
+                x[5] - kf * x[14]**2,           # from equation #10  ""
+                x[6] - kf * x[16]**2,           # from equation #11  ""
+                x[7] - x[3] - x[4] - x[5] - x[6], # from equation #12, reference in paper (18-)
+            ]
+            if failed_rotor == 1:
+                particular_equations = [
+
+                ]
+            elif failed_rotor == 2:
+                pass
+            elif failed_rotor == 3:
+                pass
+            elif failed_rotor == 4:
+                particular_equations = [
+                    x[15] - 0,
+                    x[4] - alpha_ratio * x[3],
+                    x[3] - x[5],
+                    x[9] - 0,
+                ]
+            else:
+                raise ValueError("Rotors are available in index [1-4]")
+            eqs = general_eqs + particular_equations
+            
+            return eqs
+        return system_dynamics
+
+    dynamics = get_equations(fail_rotor, alpha)
+    root = fsolve(dynamics, [0.0, 0.0, 1.0, 2.0, 2.0, 2.0, 2.0, 8.0, 0.05, 2, 2, 20, 400, 400, 400, 400])
+    evaluation = dynamics(root)
+    return root, evaluation
+
 def solve(mass, g, p, kt, kf, dump, l_arm, izzt, ixxt, izzp, fail_rotor=4):
     """
         Fail rotor from [1 to 4]
+        We have 16 variables
     """
     from scipy.optimize import fsolve
     """
-        x[0]: fb where sum forces must always be: (2+p)fb # correspond to a failed-free rotor
+    Variables
+        x[0]: 
         x[1]: nz
         x[2]: r_bar
         x[3]: wi // wi == (wi+2), wi+1 = p*wi # correspond to a failed-free rotor
@@ -100,6 +180,7 @@ def solve(mass, g, p, kt, kf, dump, l_arm, izzt, ixxt, izzp, fail_rotor=4):
         x[7]: q_bar
         x[8]: e, from equation 16 where n_bar = e * [p_bar, q_bar, r_bar]
     """
+
     def func_rotor_4(x):
         """
         if rotor 4 fails

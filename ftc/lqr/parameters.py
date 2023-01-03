@@ -41,32 +41,41 @@ class Parameters:
             #self.K_lqr13 = get_lqr_matrix(par,1,1);
             #self.K_lqr24 = get_lqr_matrix(par,2,1);
 
-            self.k_lqrff    =   None
-            self.k_lqr0     =   None
-            self.k_lqr1     =   None
-            self.k_lqr2     =   None
-            self.k_lqr3     =   None
+            self.k_lqrff            =   None
+            self.k_lqr0             =   None
+            self.k_lqr1             =   None
+            self.k_lqr2             =   None
+            self.k_lqr3             =   None
             
-            self.k_lqr02    =   None
-            self.k_lqr13    =   None
-            self.DRF_enable =   parameters['DRF_enable']
-            self.axis_tilt  =   parameters['axis_tilt']
-            self.YRC_Kp_r   =   parameters['YRC_Kp_r']
-            self.YRC_Kp_psi = parameters['YRC_Kp_psi']
+            self.k_lqr02            =   None
+            self.k_lqr13            =   None
+            self.DRF_enable         =   parameters['DRF_enable']
+            self.axis_tilt          =   parameters['axis_tilt']
+            self.YRC_Kp_r           =   parameters['YRC_Kp_r']
+            self.YRC_Kp_psi         =   parameters['YRC_Kp_psi']
 
             # control params
-            self.kpz_pos    =   parameters['kpz_pos']
-            self.kdz_pos    =   parameters['kdz_pos']
-            self.params     =   parameters
+            self.kpz_pos            =   parameters['kpz_pos']
+            self.kdz_pos            =   parameters['kdz_pos']
+            self.params             =   parameters
 
             # position control
-            self.position_maxAngle = parameters['position_maxAngle']/57.3    # maximum thrust tilt angle [rad]
-            self.position_Kp_pos = parameters['position_Kp_pos']  # position control gains
-            self.position_maxVel = parameters['position_maxVel']          # maximum velocity
-            self.position_intLim = parameters['position_intLim'] 
-            self.position_Ki_vel = parameters['position_Ki_vel']  # velocity gains
-            self.position_Kp_vel = parameters['position_Kp_vel']
-            self.t_filter = parameters['t_filter']
+            self.position_maxAngle  =   parameters['position_maxAngle']/57.3    # maximum thrust tilt angle [rad]
+            self.position_Kp_pos    =   parameters['position_Kp_pos']  # position control gains
+            self.position_maxVel    =   parameters['position_maxVel']          # maximum velocity
+            self.position_intLim    =   parameters['position_intLim'] 
+            self.position_Ki_vel    =   parameters['position_Ki_vel']  # velocity gains
+            self.position_Kp_vel    =   parameters['position_Kp_vel']
+            self.t_filter           =   parameters['t_filter']
+            self.actuator_dynamics  =   parameters['time_constant_up']
+            self.arm_length         =   parameters['arm_length']
+            self.kt                 =   parameters['moment_constant']
+            self.kf                 =   parameters['motor_constant']
+            self.izzp               =   76.6875e-6
+            self.ixxt               =   7.0015e-3
+            self.iyyt               =   7.075e-3
+            self.izzt               =   12.0766875e-3
+            self.ixxb               =   7.0e-3
     
     @property
     def gravity(self):

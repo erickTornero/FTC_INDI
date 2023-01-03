@@ -1,12 +1,13 @@
-from ast import Param
 from operator import mod
 from typing import List, Union
-from xmlrpc.client import boolean
 import numpy as np
 import control
 from .parameters import Parameters
 from ..utils.state import State
-def get_lqr_matrix(parameters, fail_idx: Union[int, List[int]], DRF_enable: bool):
+from .equilibrium_sim import SolutionQuadrotorWrapper
+def get_lqr_matrix(parameters: Parameters, fail_idx: Union[int, List[int]], DRF_enable: bool):
+    actuator_dynamics = parameters.actuator_dynamics
+    arm_length          =   parameters.arm_length
     if DRF_enable and fail_idx>=0:
         if fail_idx == 0 or fail_idx == 2:
             fail_id = [0, 2]
@@ -29,7 +30,7 @@ def get_lqr_matrix(parameters, fail_idx: Union[int, List[int]], DRF_enable: bool
         w_bar[fail_id] = 0
     else:
         pass
-
+    """
     Iz = parameters.Iz
     Iu = parameters.Iu
     Iv = parameters.Iv
@@ -38,23 +39,36 @@ def get_lqr_matrix(parameters, fail_idx: Union[int, List[int]], DRF_enable: bool
     Av  =   (Iz - Iu)/Iv
     Ip  =   parameters.Ip
     k   =   parameters.act_dyn
-
     a   =   Au * r_bar - Ip * (w_bar[0] - w_bar[1] + w_bar[2] - w_bar[3])/Iu
     b   =   Av * r_bar + Ip * (w_bar[0] - w_bar[1] + w_bar[2] - w_bar[3])/Iv
+    """
+    ixxt    =   parameters.ixxt
+    izzt    =   parameters.izzt
+    ixxb    =   parameters.ixxb
+    izzp    =   parameters.izzp
 
+    a = ((ixxt - izzt)/ixxb) * r_bar - (izzp/ixxb) * (w_bar[0] - w_bar[1] + w_bar[2] - w_bar[3])
     A   =   np.array([
         [0, a, 0, 0],
-        [b, 0, 0, 0],
+        [-a, 0, 0, 0],
         [0, 1, 0, r_bar],
         [-1, 0, -r_bar, 0]
     ])
+    B   =   (arm_length/ixxb) * np.array([
+        [1, 0],
+        [0, 1],
+        [0, 0],
+        [0, 0]
+    ])
 
+    """
     B   =   np.array([
         [1/Iu, 0],
         [0, 1/Iv],
         [0, 0],
         [0, 0]
     ])
+    """
 
     if hasattr(fail_id, '__len__'):
         if (np.sum(fail_id) < 3): # failure 0, 2
@@ -63,7 +77,8 @@ def get_lqr_matrix(parameters, fail_idx: Union[int, List[int]], DRF_enable: bool
             if fail_id >= 0: B[:, 0] = 0
 
     
-    S = k * np.eye(2) # 2x2
+    #S = k * np.eye(2) # 2x2
+    S = (1/actuator_dynamics) * np.eye(2)
 
     tShape = (S.shape[0], A.shape[1]) # (2 x 4)
     AA = np.vstack([
@@ -81,7 +96,29 @@ def get_lqr_matrix(parameters, fail_idx: Union[int, List[int]], DRF_enable: bool
     K, _, _ = control.lqr(AA, BB, Q, R)
     return K
 
+def get_lqr_matrix_improved(parameters: Parameters, fail_idx: int, alpha_ratio: float):
+    solver = SolutionQuadrotorWrapper(
+        mass=parameters.mass,
+        gravity=parameters.gravity,
+        kt=parameters.kt,
+        kf=parameters.kf,
+        dumping=2.75e-3,
+        length_arm=parameters.arm_length,
+        izzt=parameters.izzt,
+        ixxt=parameters.ixxt,
+        izzp=parameters.izzp,
+        ixxb=parameters.ixxb
+    )
+    Ae, Be, solution = solver.get_extended_control_matrixes(
+        fail_idx,
+        alpha_ratio=alpha_ratio,
+        up_time_motor=parameters.actuator_dynamics
+    )
+    Q  =   np.diag([0, 0, 2, 2, 0.0, 0.0])
+    R  =   np.eye(2)
 
+    K, _, _ = control.lqr(Ae, Be, Q, R)
+    return K
     
 
 def calculate_throtle(state, z_ref, vz_ref, parameters):
@@ -113,18 +150,11 @@ class Mixer:
                 fail_id = [0, 2]
             else:
                 fail_id = [1, 3]
-
+        """
         k0     =   parameters.k0
         t0     =   parameters.t0
         s      =   parameters.s/2.0
-        """
-        G0     =   np.array([
-            [0, -1, 0, 1], # moment X
-            [1, 0, -1, 0], # moment Y
-            [1, 1, 1, 1],  # Sum Forces ...ok
-            [1, -1, 1, -1] # moment Z ...ok
-        ]) # torques
-        """
+
         G0  =   np.array([
             [0, 1, 0, -1], # moment X
             [-1, 0, 1, 0], # moment Y
@@ -133,19 +163,29 @@ class Mixer:
         ])
 
         G      =   np.matmul(np.diag([s * k0, s * k0, k0, t0]), G0)
+        """
+        kf      =   parameters.kf
+        kt      =   parameters.kt
+        l_arm   =   parameters.arm_length
+        G       =   np.array([
+            [0,           kf * l_arm, 0,          -kf*l_arm ],
+            [-kf * l_arm, 0,          kf * l_arm,  0        ],
+            [kf,          kf,         kf,          kf       ],
+            [kt * kf,    -kt * kf,    kt * kf,    -kt * kf  ],
+        ])
 
         if type(fail_id) == int:
             if fail_id >= 0: G[:, fail_id] = 0#np.zeros((4, 1))
         elif hasattr(fail_id, '__len__'):
             G[:, fail_id] = 0#np.zeros_like(4, len(fail_id))
         
+        # matmul(G, w^2) = U
         self.G = G
         self.pinvG  =   np.linalg.pinv(G)
         self.w_min  =   parameters.w_min
         self.w_max  =   parameters.w_max
     
     def __call__(self, U: np.ndarray) -> np.ndarray:
-        
         w = np.zeros(4)
         w2 = np.matmul(self.pinvG, U.reshape(-1, 1))
 
