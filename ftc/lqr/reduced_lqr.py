@@ -130,6 +130,13 @@ class ReducedAttitudeControllerImproved:
         self.length_arm = parameters.arm_length
         self.ixxb = parameters.ixxb
 
+        # experimental
+        self.AlS = np.linalg.inv(np.array([
+            [-1, 0, 0],
+            [0, 1, -1],
+            [1, 1, 1]
+        ]))
+
     def __call__(self, state: State, n_des: np.ndarray, f_ref: float, r_cmd: float) -> np.ndarray:
         # parameters from state
         # attitude, omegaf, w_speeds
@@ -146,7 +153,7 @@ class ReducedAttitudeControllerImproved:
             [sin(psi) * cos(theta), sin(psi) * sin(theta) * sin(phi) + cos(psi) * cos(phi), sin(psi) * sin(theta) * cos(phi) - cos(psi) * sin(phi)],
             [-sin(theta), cos(theta) * sin(phi), cos(theta) * cos(phi)]
         ])
-        u, v, _ = np.matmul(R_IB, np.array(state.omegaf).reshape(-1, 1)).flatten().tolist()
+        #u, v, _ = np.matmul(R_IB, np.array(state.omegaf).reshape(-1, 1)).flatten().tolist()
 
         h_des = np.linalg.solve(R_IB, n_des)
         #import pdb; pdb.set_trace()
@@ -197,12 +204,26 @@ class ReducedAttitudeControllerImproved:
         # Ty = (u1 + u1_bar)*length_arm
         Tx = (Muv[1, 0] + self.u2_equilibrium) * self.length_arm
         Ty = (Muv[0, 0] + self.u1_equilibrium) * self.length_arm
-
+        #print(Mz_ref)
         U = np.zeros(4)
         U[0] = Tx #u1 (f2  - f4) 
         U[1] = Ty #u2 (f3 - f1)
         U[2] = T_ref            # total sum of force
         U[3] = Mz_ref           # total moment
+
+        # new system
+        
+        f1, f2, f4 = np.matmul(
+            self.AlS,
+            np.array([
+                Muv[0, 0] + self.u1_equilibrium,
+                Muv[1, 0] + self.u2_equilibrium,
+                T_ref,
+                #self.equilibrium_state.f1 + self.equilibrium_state.f2 + self.equilibrium_state.f3 + self.equilibrium_state.f4
+            ]).reshape(-1, 1)
+        ).flatten()
+        return np.array([f1, f2, 0, f4])
+        
         return U
 
 

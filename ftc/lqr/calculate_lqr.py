@@ -184,8 +184,13 @@ class Mixer:
         self.pinvG  =   np.linalg.pinv(G)
         self.w_min  =   parameters.w_min
         self.w_max  =   parameters.w_max
+        self.kf = kf
     
     def __call__(self, U: np.ndarray) -> np.ndarray:
+        w = np.sqrt(np.abs(U)/self.kf)
+        w = np.clip(w, self.w_min, self.w_max)
+        w[0] = 0.0
+        return w
         w = np.zeros(4)
         w2 = np.matmul(self.pinvG, U.reshape(-1, 1))
 
