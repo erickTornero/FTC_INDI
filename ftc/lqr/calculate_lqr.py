@@ -189,7 +189,8 @@ class Mixer:
     def __call__(self, U: np.ndarray) -> np.ndarray:
         w = np.sqrt(np.abs(U)/self.kf)
         w = np.clip(w, self.w_min, self.w_max)
-        w[0] = 0.0
+        #print(w[0])
+        #w[0] = w[0]*0.0 #TODO this an error, must work without it
         return w
         w = np.zeros(4)
         w2 = np.matmul(self.pinvG, U.reshape(-1, 1))
