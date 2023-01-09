@@ -20,5 +20,6 @@
     "Iyz": 0.0,
     "Iz": 0.012,
     "w_max": 838,
-    "w_min": 0
+    "w_min": 0,
+    "aerodynamics_damping": 3.5e-3
 }

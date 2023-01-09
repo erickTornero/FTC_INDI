@@ -99,7 +99,7 @@ class ReducedAttitudeControllerImproved:
             gravity=parameters.gravity,
             kt=parameters.kt,
             kf=parameters.kf,
-            dumping=2.75e-3,
+            dumping=parameters.aerodynamics_damping,
             length_arm=parameters.arm_length,
             izzt=parameters.izzt,
             ixxt=parameters.ixxt,
@@ -130,12 +130,15 @@ class ReducedAttitudeControllerImproved:
         self.ixxb = parameters.ixxb
 
         # experimental
-        self.AlS = np.linalg.inv(np.array([
-            [-1, 0, 0],
-            [0, 1, -1],
-            [1, 1, 1]
-        ]))
-        self.third_rotor_activated = False
+        matrix = np.array([
+            [-1, 0, 1, 0],   # f3 - f1
+            [0, 1, 0, -1],   # f2 - f4
+            [1, 1, 1, 1],    # f1 + f2 + f3 + f4
+        ])
+        matrix[:, parameters.fail_id]=0.0
+        self.AlS = np.linalg.pinv(matrix)
+        self.counter_rotor_activated = False
+        self.counter_rotor_index = (parameters.fail_id + 2) % 4
 
     def __call__(self, state: State, n_des: np.ndarray, f_ref: float, r_cmd: float) -> np.ndarray:
         # parameters from state
@@ -209,25 +212,29 @@ class ReducedAttitudeControllerImproved:
         U[3] = Mz_ref           # total moment
 
         # new system
+        alphas = np.array([
+            Muv[0, 0] + self.u1_equilibrium, # f3 - f1
+            Muv[1, 0] + self.u2_equilibrium, # f2 - f4
+            T_ref,                           # f1 + f2 + f3 + f4
+            #self.equilibrium_state.f1 + self.equilibrium_state.f2 + self.equilibrium_state.f3 + self.equilibrium_state.f4
+        ]).reshape(-1, 1)
         
-        f1, f2, f4 = np.matmul(
+        forces = np.matmul(
             self.AlS,
-            np.array([
-                Muv[0, 0] + self.u1_equilibrium,
-                Muv[1, 0] + self.u2_equilibrium,
-                T_ref,
-                #self.equilibrium_state.f1 + self.equilibrium_state.f2 + self.equilibrium_state.f3 + self.equilibrium_state.f4
-            ]).reshape(-1, 1)
+            alphas
         ).flatten()
-        if np.abs(r) <= 15.0:
-            f1 = 0.0 #set to zero if w_r is less than 10rad/s according to the paper ... seems work
+        ##TODO: experimental all forces must be greater than 0
+        forces = np.maximum(forces, 0.0)
+        if forces[self.counter_rotor_index] < 0.0:
+            print(forces[self.counter_rotor_index])
+        if np.abs(r) <= 10.0:
+            forces[self.counter_rotor_index] = 0.0
+            #f1 = 0.0 #set to zero if w_r is less than 10rad/s according to the paper ... seems work
         else:
-            if not self.third_rotor_activated:
+            if not self.counter_rotor_activated:
                 print('FT Activated rotor 1')
-                self.third_rotor_activated = True
-        return np.array([f1, f2, 0, f4])
-        
-        return U
+                self.counter_rotor_activated = True
+        return forces
 
 
 if __name__ == "__main__":
