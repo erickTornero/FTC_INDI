@@ -4,7 +4,6 @@ from ftc.indi.controller import DiscreteTimeDerivative
 from ftc.lqr.reduced_lqr import ReducedAttitudeController, ReducedAttitudeControllerImproved
 
 from ftc.utils.filters import LowpassFilter
-from ftc.utils.transforms import pos_invert_yz
 from ftc.base_controller import BaseController
 from ftc.lqr.parameters import Parameters
 from wrapper.state_space import StateSpaceRobots
@@ -13,9 +12,10 @@ from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
 from ftc.lqr.poscontrol import PositionControl
 from ftc.lqr.yawcontrol import yaw_controller
+from ftc.lqr.position_controller import PositionController
 class LQRController(BaseController):
     def __init__(self, parameters: Parameters, T_sampling:float=None, state_space: Optional[StateSpaceRobots]=None):
-        self.T_sampling = T_sampling
+        self.T_sampling = T_sampling # fast inner Ts controller
         self.parameters = parameters
         self.state_space    =   state_space
         self.parameters.k_lqrff = get_lqr_matrix(parameters,-1, False)
@@ -38,6 +38,17 @@ class LQRController(BaseController):
         self.mixer                  =   Mixer(parameters)
 
         self.errorInt = np.zeros(3, dtype=np.float32)
+        self.position_controller = PositionController(
+            T_sampling,
+            10,
+            parameters.gravity,
+            parameters.position_Kp_pos,
+            parameters.position_Kp_vel,
+            parameters.position_Ki_vel,
+            parameters.position_maxAngle,
+            parameters.position_intLim,
+            parameters.position_maxVel,
+        )
 
     def get_action(
         self, 
@@ -69,7 +80,8 @@ class LQRController(BaseController):
         return self.mixer(U_lqr)
 
     def outer_controller(self, state: State, inputs: Inputs):
-        n_des, self.errorInt = PositionControl(inputs, state, self.parameters, self.errorInt)
+        #n_des, self.errorInt = PositionControl(inputs, state, self.parameters, self.errorInt)
+        n_des, _ = self.position_controller(state, inputs)
         r_cmd = yaw_controller(inputs, state, self.parameters)
         return n_des, r_cmd
 

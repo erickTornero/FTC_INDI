@@ -94,8 +94,6 @@ class ReducedAttitudeControllerImproved:
         self.fail_id = parameters.fail_id
         self.parameters = parameters
         #
-        self.u0 = 0
-        self.v0 = 0
         solver = SolutionQuadrotorWrapper(
             mass=parameters.mass,
             gravity=parameters.gravity,
@@ -111,13 +109,14 @@ class ReducedAttitudeControllerImproved:
         Ae, Be, solution = solver.get_extended_control_matrixes(
             parameters.fail_id + 1,
             alpha_ratio=alpha_ratio,
-            up_time_motor=parameters.actuator_dynamics
+            up_time_motor=0.01875#parameters.actuator_dynamics
         )
         self.equilibrium_state = solution
         self.u1_equilibrium = self.equilibrium_state.f3 - self.equilibrium_state.f1
         self.u2_equilibrium = self.equilibrium_state.f2 - self.equilibrium_state.f4
 
         Q  =   np.diag([0, 0, 2, 2, 0.0, 0.0])
+        #Q  =   np.diag([0.0, 0.0, 1, 1, 0.0, 0.0])
         R  =   np.eye(2)
 
         K, _, _ = control.lqr(Ae, Be, Q, R)
@@ -136,6 +135,7 @@ class ReducedAttitudeControllerImproved:
             [0, 1, -1],
             [1, 1, 1]
         ]))
+        self.third_rotor_activated = False
 
     def __call__(self, state: State, n_des: np.ndarray, f_ref: float, r_cmd: float) -> np.ndarray:
         # parameters from state
@@ -155,16 +155,13 @@ class ReducedAttitudeControllerImproved:
         ])
         #u, v, _ = np.matmul(R_IB, np.array(state.omegaf).reshape(-1, 1)).flatten().tolist()
 
-        h_des = np.linalg.solve(R_IB, n_des)
+        h_des = np.linalg.solve(R_IB, n_des) #TODO: debug more here! hdes - h
         #import pdb; pdb.set_trace()
         #eta = np.matmul(self.R_xy_uv, h[:2].reshape(-1, 1))
         eta = h_des[:2]#.reshape(-1, 1)
 
         w_speeds = state.w_speeds # s: 0.34?
         # torques xy in body axis
-        #Muv0 = self.kf * self.length_arm * np.array([w_speeds[1]**2 - w_speeds[3]**2, w_speeds[2]**2 - w_speeds[0]**2])
-        Muv0 = self.kf * np.array([w_speeds[1]**2 - w_speeds[3]**2, w_speeds[2]**2 - 405**2])
-        Muv0 = -self.kf * np.array([w_speeds[2]**2 - w_speeds[0]**2, w_speeds[1]**2 - 405**2])
 
         Muv0 = self.kf * np.array([w_speeds[2] - w_speeds[0]**2, w_speeds[1]**2 - w_speeds[3]**2])
         ###Muv0 -= np.array([self.u1_equilibrium, self.u2_equilibrium])
@@ -224,6 +221,10 @@ class ReducedAttitudeControllerImproved:
         ).flatten()
         if np.abs(r) <= 15.0:
             f1 = 0.0 #set to zero if w_r is less than 10rad/s according to the paper ... seems work
+        else:
+            if not self.third_rotor_activated:
+                print('FT Activated rotor 1')
+                self.third_rotor_activated = True
         return np.array([f1, f2, 0, f4])
         
         return U

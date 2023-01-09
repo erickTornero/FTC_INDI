@@ -76,8 +76,8 @@ if __name__ == '__main__':
         configsfiles    =   glob.glob(os.path.join(save_paths,'*.json'))
         files_paths     =   glob.glob(os.path.join(save_paths,'*.pkl'))
 
-        assert len(configsfiles) ==0, 'The folder is busy, select other'
-        assert len(files_paths)==0, 'The folder is busy, select another one'
+        #assert len(configsfiles) ==0, 'The folder is busy, select other'
+        assert len(files_paths)==0, f"The folder <{save_paths}> is busy, select another one"
         if not os.path.exists(save_paths):
             os.makedirs(save_paths)
         

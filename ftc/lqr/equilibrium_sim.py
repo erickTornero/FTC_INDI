@@ -77,7 +77,7 @@ class SolutionQuadrotorWrapper:
         return root, cl
 
 
-    def get_control_matrixes(self, failed_rotor: int, alpha_ratio: float) -> Tuple[np.ndarray, np.ndarray, SolutionXBar]:
+    def get_control_matrixes(self, failed_rotor: int, alpha_ratio: float, double_rotor=False) -> Tuple[np.ndarray, np.ndarray, SolutionXBar]:
         root, _ = self.__call__(failed_rotor, alpha_ratio)
         solution = SolutionXBar(*root)
         # from equation 28
@@ -97,11 +97,14 @@ class SolutionQuadrotorWrapper:
             [0, 0],
             [0, 0]
         ])
+        if double_rotor:
+            index = failed_rotor % 2
+            B = B[:, index].reshape(-1, 1)
         return A, B, solution
 
     def get_extended_control_matrixes(self, failed_rotor: int, alpha_ratio: float, up_time_motor: float):
         A, B, solution = self.get_control_matrixes(failed_rotor, alpha_ratio)
-        S = np.eye(2) * 1/up_time_motor
+        S = np.eye(B.shape[1]) * 1/up_time_motor
         Ae_upper = np.concatenate([A, B], axis=1)
         Ae_lower = np.concatenate([np.zeros((S.shape[0], A.shape[1])), -S], axis=1)
         Ae = np.concatenate([Ae_upper, Ae_lower], axis=0)
