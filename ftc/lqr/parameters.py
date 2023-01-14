@@ -78,7 +78,9 @@ class Parameters:
             self.ixxb               =   7.0e-3
             self.aerodynamics_damping =   parameters['aerodynamics_damping']
             self.double_rotor       =   parameters['double_rotor']
-    
+            self.alpha_ratio        =   parameters['alpha_ratio'] # ratio of force of the counter rotor
+            assert self.alpha_ratio >=0.0 and self.alpha_ratio < 1.0, f"alpha ratio must be in range [0, 1> but got {self.alpha_ratio}"
+
     @property
     def gravity(self):
         return self.g

@@ -24,7 +24,7 @@ class ReducedAttitudeController:
         Ae, Be, solution = solver.get_extended_control_matrixes(
             parameters.fail_id + 1,
             alpha_ratio=alpha_ratio,
-            up_time_motor=0.01875,#parameters.actuator_dynamics
+            up_time_motor=parameters.actuator_dynamics,
             double_rotor=double_rotor
         )
         self.equilibrium_state = solution

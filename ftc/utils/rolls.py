@@ -90,7 +90,7 @@ def rollouts(
         if damaged_motor >= 0: state.update_fail_id(damaged_motor)
         inputs = Inputs()
         inputs.update_position_target(traj[timestep])
-        inputs.update_yawTarget(0)
+        inputs.update_yaw_target(0)
         controller.init_controller(state, inputs, 0)
 
         while not done and timestep < max_path_length:

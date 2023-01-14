@@ -1,3 +1,4 @@
+import numpy as np
 class State:
     def __init__(self, invert_axis=False):
         self.position = None
@@ -47,18 +48,21 @@ class State:
         
 
     @property
-    def att(self):
+    def att(self) -> np.ndarray:
         return self.euler
 
     @property
-    def omegaf(self):
+    def omegaf(self) -> np.ndarray:
         #get anular speeds
         return self.angular_vel
 
     @property
-    def pos(self):
+    def pos(self) -> np.ndarray:
         return self.position
 
     @property
-    def vel(self):
+    def vel(self) -> np.ndarray:
         return self.linear_vel
+    @property
+    def yaw_rate(self) -> float:
+        return self.omegaf[2]

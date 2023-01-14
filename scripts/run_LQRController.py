@@ -34,7 +34,7 @@ controller = LQRController(parameters=parameters, T_sampling=Ts)
 max_path_length = 50000
 inputs = Inputs()
 inputs.update_position_target(np.array([0, 0 , 5]))
-inputs.update_yawTarget()
+inputs.update_yaw_target()
 state = State()
 state.update_fail_id(parameters.fail_id)
 

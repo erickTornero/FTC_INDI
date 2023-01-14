@@ -1,10 +1,13 @@
 import numpy as np
+from ftc.utils.inputs import Inputs
+from ftc.utils.state import State
+from ftc.indi.parameters import Parameters
 #errorInt = [0, 0, 0]
-def URPositionControl(inputs, state, par, errorInt):
+def URPositionControl(inputs: Inputs, state: State, par: Parameters, errorInt: np.ndarray):
     maxAngle = par.position_maxAngle
 
     #position control
-    errorPos = [inputs.xTarget, inputs.yTarget, inputs.zTarget]  - state.pos
+    errorPos = [inputs.x_target, inputs.y_target, inputs.z_target]  - state.pos
 
     velTarget = par.position_Kp_pos * errorPos
     maxVel = par.position_maxVel

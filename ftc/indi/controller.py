@@ -88,7 +88,7 @@ class INDIController(BaseController):
         _lambda = self.saturator_lambda(_lambda)
 
         nB = self._getnB(state.fail_id)
-        Z_ref = inputs.zTarget
+        Z_ref = inputs.z_target
         Z_ref_f = self.low_pass_zTarg(Z_ref, Tc)
         Vz_ref = self.derivator_z(Z_ref_f, Tc)
 
@@ -136,7 +136,7 @@ class INDIController(BaseController):
         _state.update_fail_id(damaged_motor)
         _input = Inputs()
         _input.update_position_target(position_target)
-        _input.update_yawTarget(0)
+        _input.update_yaw_target(0)
         _state.update(obs_dict_initial)
 
         inputs = _input
@@ -144,7 +144,7 @@ class INDIController(BaseController):
 
         self.subsystem.init_subsystem(t)
         # filters
-        self.low_pass_zTarg.start(inputs.zTarget, t)
+        self.low_pass_zTarg.start(inputs.z_target, t)
         #self.low_pass_ndes.start(np.array([0, 0, -1]).reshape(-1,1), t)
 
         # derivators

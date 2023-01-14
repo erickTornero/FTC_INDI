@@ -51,18 +51,18 @@ class PositionController:
         self,
         state: State,
         inputs: Inputs,
-    ) -> Tuple[np.ndarray, float]:
+    ) -> np.ndarray:
         if self.tick_counter % self.nticks_activation == 0:
             self.n_des = self.calculate_ndes(state, inputs)
         self.tick_counter += 1
-        return self.n_des, 0 # 0 is dummy value
+        return self.n_des
 
     def calculate_ndes(
         self,
         state: State,
         inputs: Inputs
     ) -> Tuple[np.ndarray, float]:
-        pos_error = np.array([inputs.xTarget, inputs.yTarget, inputs.zTarget] - state.pos)
+        pos_error = np.array([inputs.x_target, inputs.y_target, inputs.z_target] - state.pos)
         vel_target = self.kp_pos * pos_error
         vel_target_clipped = np.clip(vel_target, -self.max_linear_speed, self.max_linear_speed)
         vel_error = vel_target_clipped - state.vel
