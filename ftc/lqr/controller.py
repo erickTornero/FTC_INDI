@@ -1,40 +1,35 @@
 from typing import Dict, Optional
 import numpy as np
 from ftc.indi.controller import DiscreteTimeDerivative
-from ftc.lqr.reduced_lqr import ReducedAttitudeController, ReducedAttitudeControllerImproved
 
 from ftc.utils.filters import LowpassFilter
 from ftc.base_controller import BaseController
 from ftc.lqr.parameters import Parameters
 from wrapper.state_space import StateSpaceRobots
-from ftc.lqr.calculate_lqr import Mixer, get_lqr_matrix, FlotCalculator, get_lqr_matrix_improved
+from ftc.lqr.calculate_lqr import Mixer, get_lqr_matrix, FlotCalculator
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
-from ftc.lqr.poscontrol import PositionControl
 from ftc.lqr.yawcontrol import yaw_controller
 from ftc.lqr.position_controller import PositionController
+from ftc.lqr.att_lqr import ReducedAttitudeController
 class LQRController(BaseController):
     def __init__(self, parameters: Parameters, T_sampling:float=None, state_space: Optional[StateSpaceRobots]=None):
         self.T_sampling = T_sampling # fast inner Ts controller
         self.parameters = parameters
         self.state_space    =   state_space
-        self.parameters.k_lqrff = get_lqr_matrix(parameters,-1, False)
-        # single rotor failure
-        self.parameters.k_lqr0 = get_lqr_matrix(parameters, 0, False)
-        self.parameters.k_lqr1 = get_lqr_matrix(parameters, 1, False)
-        self.parameters.k_lqr2 = get_lqr_matrix(parameters, 2, False)
-        self.parameters.k_lqr3 = get_lqr_matrix(parameters, 3, False)
-        #self.parameters.k_lqr2 = get_lqr_matrix_improved(parameters, 2, 0.5)
-        #self.parameters.k_lqr3 = get_lqr_matrix_improved(parameters, 3, 0.5)
-        # double rotor failure
-        self.parameters.k_lqr02 = get_lqr_matrix(parameters, 0, True)
-        self.parameters.k_lqr13 = get_lqr_matrix(parameters, 1, True)
 
         self.z_target_filter   = LowpassFilter(1, parameters.t_filter, T_sampling)
         self.z_target_derivator =   DiscreteTimeDerivative(T_sampling)
         self.flot_calculator    =   FlotCalculator(parameters)
-        #self.reduced_att_controller =   ReducedAttitudeController(parameters)
-        self.reduced_att_controller =   ReducedAttitudeControllerImproved(parameters)
+
+        self.double_rotor = parameters.double_rotor
+        self.red_att_double = ReducedAttitudeController(parameters, double_rotor=True)
+        if not self.double_rotor:
+            self.red_att_single = ReducedAttitudeController(
+                parameters, double_rotor=self.double_rotor
+            )
+            self.counter_rotor_activated = False
+
         self.mixer                  =   Mixer(parameters)
 
         self.errorInt = np.zeros(3, dtype=np.float32)
@@ -49,6 +44,7 @@ class LQRController(BaseController):
             parameters.position_intLim,
             parameters.position_maxVel,
         )
+        self.switch_yaw_rate_threshold = 10.0
 
     def get_action(
         self, 
@@ -76,7 +72,15 @@ class LQRController(BaseController):
         """Implement here a forward pass of the controller"""
         n_des, r_cmd = self.outer_controller(state, inputs)
         f_ref = self._get_flot_lqr(state, inputs)
-        U_lqr   =   self.reduced_att_controller(state, n_des, f_ref, r_cmd)
+        yaw_rate_abs = np.abs(state.omegaf[2])
+
+        if self.double_rotor or yaw_rate_abs <= self.switch_yaw_rate_threshold:
+            U_lqr = self.red_att_double(state, n_des, f_ref, r_cmd)
+        else:
+            U_lqr = self.red_att_single(state, n_des, f_ref, r_cmd)
+            if not self.counter_rotor_activated:
+                print(' ... Using single rotor lqr controller ...')
+                self.counter_rotor_activated = True
         return self.mixer(U_lqr)
 
     def outer_controller(self, state: State, inputs: Inputs):

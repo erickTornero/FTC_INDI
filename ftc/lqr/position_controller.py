@@ -77,6 +77,5 @@ class PositionController:
         # publish
         msg = Vector3(*n_des.tolist())
         self.n_des_publisher.publish(msg)
-        print(n_des)
         return n_des
         

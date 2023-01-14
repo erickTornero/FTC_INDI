@@ -166,7 +166,7 @@ class ReducedAttitudeControllerImproved:
         w_speeds = state.w_speeds # s: 0.34?
         # torques xy in body axis
 
-        Muv0 = self.kf * np.array([w_speeds[2] - w_speeds[0]**2, w_speeds[1]**2 - w_speeds[3]**2])
+        Muv0 = self.kf * np.array([w_speeds[2]**2 - w_speeds[0]**2, w_speeds[1]**2 - w_speeds[3]**2])
         ###Muv0 -= np.array([self.u1_equilibrium, self.u2_equilibrium])
         ##Muv0 = self.kf * np.array([w_speeds[1]**2 - w_speeds[3]**2, w_speeds[2] - w_speeds[0]**2]) #...from equation 12 and 13
         ##Muv0 -= np.array([self.u2_equilibrium, self.u1_equilibrium, ])

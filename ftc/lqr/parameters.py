@@ -77,6 +77,7 @@ class Parameters:
             self.izzt               =   12.0766875e-3
             self.ixxb               =   7.0e-3
             self.aerodynamics_damping =   parameters['aerodynamics_damping']
+            self.double_rotor       =   parameters['double_rotor']
     
     @property
     def gravity(self):

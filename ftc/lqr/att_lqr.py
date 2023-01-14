@@ -32,7 +32,7 @@ class ReducedAttitudeController:
         self.u2_equilibrium = self.equilibrium_state.f2 - self.equilibrium_state.f4
 
         #Q  =   np.diag([0, 0, 2, 2, 0.0, 0.0])
-        Q = np.diag([0, 0, 2, 2] + [0,] if double_rotor else [0, 0])
+        Q = np.diag([0, 0, 2, 2] + ([0,] if double_rotor else [0, 0]))
         #Q  =   np.diag([0.0, 0.0, 1, 1, 0.0, 0.0])
         R  =   np.eye(2 if not double_rotor else 1)
 
@@ -146,13 +146,5 @@ class ReducedAttitudeController:
         ).flatten()
         ##TODO: experimental all forces must be greater than 0
         forces = np.maximum(forces, 0.0)
-        if forces[self.counter_rotor_index] < 0.0:
-            print(forces[self.counter_rotor_index])
-        if np.abs(r) <= 10.0:
-            forces[self.counter_rotor_index] = 0.0
-            #f1 = 0.0 #set to zero if w_r is less than 10rad/s according to the paper ... seems work
-        else:
-            if not self.counter_rotor_activated:
-                print('FT Activated rotor 1')
-                self.counter_rotor_activated = True
+
         return forces

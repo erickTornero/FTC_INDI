@@ -32,6 +32,9 @@ env = QuadrotorEnvRos(np.zeros(3, dtype=np.float32), crippled_degree, state_spac
 controller = LQRController(parameters=parameters, T_sampling=Ts)
 
 max_path_length = 50000
+inputs = Inputs()
+inputs.update_position_target(np.array([0, 0 , 5]))
+inputs.update_yawTarget()
 state = State()
 state.update_fail_id(parameters.fail_id)
 
@@ -40,7 +43,7 @@ cum_reward = 0
 
 state.update(env.last_observation)
 for i in range(max_path_length):
-    control_signal = controller(state)
+    control_signal = controller(state, inputs)
     
     obs, reward, done, info  = env.step(control_signal) # make an step in the environment
     state.update(env.last_observation) #map states to State class
