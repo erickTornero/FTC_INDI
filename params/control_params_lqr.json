@@ -13,7 +13,7 @@
     "position_Kp_pos": [1, 1, 1],
     "position_maxVel": 10.0,
     "position_intLim": 1.0,
-    "position_Ki_vel": [1, 1, 5.0],
+    "position_Ki_vel": [0.1, 0.1, 5.0],
     "position_Kp_vel": [1, 1, 2.0],
     "t_filter": 0.02
 }
