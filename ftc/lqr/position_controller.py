@@ -62,13 +62,22 @@ class PositionController:
         state: State,
         inputs: Inputs
     ) -> Tuple[np.ndarray, float]:
-        pos_error = np.array([inputs.x_target, inputs.y_target, inputs.z_target] - state.pos)
+        #import pdb;pdb.set_trace()
+        pos_error = inputs.position_target - state.pos
         vel_target = self.kp_pos * pos_error
-        vel_target_clipped = np.clip(vel_target, -self.max_linear_speed, self.max_linear_speed)
+        vel_target_clipped = np.clip(
+            vel_target,
+            -self.max_linear_speed,
+            self.max_linear_speed
+        )
         vel_error = vel_target_clipped - state.vel
         integral_error = self.integral_error + vel_error * self.period_controller
-        self.integral_error = np.clip(integral_error, -self.max_integral_error, self.max_integral_error)
-        a_ref = self.kp_vel * vel_error + self.ki_vel * self.integral_error
+        self.integral_error = np.clip(
+            integral_error,
+            -self.max_integral_error,
+            self.max_integral_error
+        )
+        a_ref = 2.0 * vel_target + self.kp_vel * vel_error + self.ki_vel * self.integral_error
         a_ref[2] = a_ref[2] + self.gravity
         lateral_ratio = np.sqrt(a_ref[0]**2 + a_ref[1]**2)/self.max_lateral_force
         scaler = max(lateral_ratio, 1)
@@ -76,6 +85,46 @@ class PositionController:
         n_des = a_ref/np.linalg.norm(a_ref)
         # publish
         msg = Vector3(*n_des.tolist())
-        self.n_des_publisher.publish(msg)
+        #self.n_des_publisher.publish(msg)
         return n_des
-        
+
+if __name__ == "__main__":
+    nticks                  =   5
+    gravity                 =   9.81    # m/s2
+    frequency_controller    =   500     # hz
+
+    kp_pos = np.array([1, 1, 1])
+    kp_vel = np.array([1, 1, 1])
+    ki_vel = np.array([1, 1, 1])
+    max_angle = 0.523                   # 30 degrees in rads
+    max_integral_error = 1.0
+    max_linear_speed = 3.0
+
+    pos_c = PositionController(
+        1/frequency_controller,
+        nticks,
+        gravity,
+        kp_pos,
+        kp_vel,
+        ki_vel,
+        max_angle,
+        max_integral_error,
+        max_linear_speed
+    )
+
+    state = State()
+    state.update({
+        "position":         np.zeros(3, dtype=np.float32),  # important for position controller
+        "linear_vel":       np.array([0.0, 1.0, 0.0]),      # important for position controller
+        "quaternion":       None,
+        "angular_vel":      None,
+        "rotation_matrix":  None,
+        "euler":            None,
+        "lin_acc":          None,
+        "w_speeds":         None,
+    })
+
+    inputs = Inputs()
+    inputs.update_position_target([0, 1, 1])
+    ndes = pos_c(state, inputs)
+    print(ndes)

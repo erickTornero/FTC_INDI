@@ -27,3 +27,12 @@ class Inputs:
 
     def update_yaw_target(self, yaw_target):
         self.yaw_target = yaw_target
+
+    @property
+    def position_target(self) -> np.ndarray:
+        return np.array([
+                self.x_target,
+                self.y_target,
+                self.z_target
+            ], dtype=np.float32
+        )
