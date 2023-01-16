@@ -60,7 +60,7 @@ class ReducedAttitudeController:
         self.counter_rotor_activated = False
         self.double_rotor = double_rotor
 
-    def __call__(self, state: State, n_des: np.ndarray, f_ref: float, r_cmd: float) -> np.ndarray:
+    def __call__(self, state: State, n_des: np.ndarray, f_ref: float) -> np.ndarray:
         # parameters from state
         # attitude, omegaf, w_speeds
         phi = state.att[0]

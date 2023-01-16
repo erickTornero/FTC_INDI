@@ -51,8 +51,6 @@ class Parameters:
             self.k_lqr13            =   None
             self.DRF_enable         =   parameters['DRF_enable']
             self.axis_tilt          =   parameters['axis_tilt']
-            self.YRC_Kp_r           =   parameters['YRC_Kp_r']
-            self.YRC_Kp_psi         =   parameters['YRC_Kp_psi']
 
             # control params
             self.kpz_pos            =   parameters['kpz_pos']

@@ -10,10 +10,10 @@
     "YRC_Kp_r": 40.0,
     "YRC_Kp_psi": 40.0,
     "position_maxAngle": 10,
-    "position_Kp_pos": [1, 1, 1],
+    "position_Kp_pos": [0.5, 0.5, 0.5],
     "position_maxVel": 10.0,
     "position_intLim": 1.0,
-    "position_Ki_vel": [0.1, 0.1, 5.0],
+    "position_Ki_vel": [0.01, 0.01, 5.0],
     "position_Kp_vel": [1, 1, 2.0],
     "t_filter": 0.02
 }

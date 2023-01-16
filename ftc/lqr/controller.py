@@ -69,14 +69,14 @@ class LQRController(BaseController):
 
     def __call__(self, state: State, inputs: Inputs):
         """Implement here a forward pass of the controller"""
-        n_des, r_cmd = self.outer_controller(state, inputs)
+        n_des, _ = self.outer_controller(state, inputs)
         f_ref = self._get_flot_lqr(state, inputs)
         yaw_rate_abs: float = np.abs(state.yaw_rate)
 
         if self.double_rotor or yaw_rate_abs <= self.switch_yaw_rate_threshold:
-            U_lqr = self.red_att_double(state, n_des, f_ref, r_cmd)
+            U_lqr = self.red_att_double(state, n_des, f_ref)
         else:
-            U_lqr = self.red_att_single(state, n_des, f_ref, r_cmd)
+            U_lqr = self.red_att_single(state, n_des, f_ref)
             if not self.counter_rotor_activated:
                 print(' ... Using single rotor lqr controller ...')
                 self.counter_rotor_activated = True
@@ -84,8 +84,8 @@ class LQRController(BaseController):
 
     def outer_controller(self, state: State, inputs: Inputs):
         n_des = self.position_controller(state, inputs)
-        r_cmd = yaw_controller(inputs, state, self.parameters)
-        return n_des, r_cmd
+        #r_cmd = yaw_controller(inputs, state, self.parameters)
+        return n_des, 0#r_cmd
 
 
     def _get_flot_lqr(self, state: State, inputs: Inputs) -> float:
