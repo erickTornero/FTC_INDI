@@ -109,9 +109,6 @@ def rollouts(
                     if timestep == (push_failure_at + 4):
                         print('Switch architecture')
                         # TODO: Switch controller
-                        #horizon     =   20
-                        #mpc.restart_mpc(0.0)
-                        #env.set_reward_function('type2')
 
             next_target_pos =   traj[timestep + 1]
             inputs.update_position_target(next_target_pos)

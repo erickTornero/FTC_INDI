@@ -5,14 +5,14 @@ import numpy as np
 from ftc.utils.gen_trajectories import Trajectory
 from ftc.lqr.parameters import Parameters
 from ftc.lqr.controller import LQRController
-from wrapper import QuadrotorEnvRos, state_space
+from wrapper import QuadrotorEnvRos
 from ftc.utils.rolls import rollouts
 from ftc.utils.logger import Logger
 
 if __name__ == '__main__':
     crippled_degree = np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
     state_space = ['rotation_matrix', 'euler', 'position', 'linear_vel', 'angular_vel']
-    save_paths = './data/rolls71'
+    save_paths = './data/rolls75'
     config = {
         "max_path_length": 10000,
         "nrollouts": 20,
@@ -44,7 +44,6 @@ if __name__ == '__main__':
             }
         }
     }
-    zbias = -6.0
 
     quadrotor_parms_path = 'params/quad_parameters.json'
     control_parms_path = 'params/control_params_lqr.json'
