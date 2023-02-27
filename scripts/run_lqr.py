@@ -12,7 +12,7 @@ from ftc.utils.logger import Logger
 if __name__ == '__main__':
     crippled_degree = np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
     state_space = ['rotation_matrix', 'euler', 'position', 'linear_vel', 'angular_vel']
-    save_paths = './data/rolls75'
+    save_paths = './data/rolls76'
     config = {
         "max_path_length": 10000,
         "nrollouts": 20,

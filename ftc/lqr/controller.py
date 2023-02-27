@@ -9,7 +9,6 @@ from wrapper.state_space import StateSpaceRobots
 from ftc.lqr.calculate_lqr import Mixer, FlotCalculator
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
-from ftc.lqr.yawcontrol import yaw_controller
 from ftc.lqr.position_controller import PositionController
 from ftc.lqr.att_lqr import ReducedAttitudeController
 class LQRController(BaseController):
@@ -84,7 +83,6 @@ class LQRController(BaseController):
 
     def outer_controller(self, state: State, inputs: Inputs):
         n_des = self.position_controller(state, inputs)
-        #r_cmd = yaw_controller(inputs, state, self.parameters)
         return n_des, 0#r_cmd
 
 

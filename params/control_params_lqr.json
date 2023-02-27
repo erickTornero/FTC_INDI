@@ -7,8 +7,6 @@
     "axis_tilt": 0.1,
     "kpz_pos": 10,
     "kdz_pos": 10,
-    "YRC_Kp_r": 40.0,
-    "YRC_Kp_psi": 40.0,
     "position_maxAngle": 10,
     "position_Kp_pos": [0.2, 0.2, 0.2],
     "position_maxVel": 10.0,
