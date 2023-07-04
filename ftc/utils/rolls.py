@@ -146,6 +146,7 @@ def rollouts(
             # endif
             
             targetposition  =   next_target_pos
+            obs = next_obs
             state.update(env.last_observation)
             # Test stacked
 
