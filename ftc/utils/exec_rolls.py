@@ -1,7 +1,7 @@
 import os
 import json
 from time import time
-from ftc.switch_controllers.switch_controller import SwitchController, MODE_CONTROLLER
+from ftc.switch_controllers.switch_controller import SwitchController, MODE_CONTROLLER, FTC_CONTROLLER_TYPE
 from ftc.utils.gen_trajectories import Trajectory
 from ftc.utils.logger import Logger
 from wrapper.wrapper_crippled import QuadrotorEnvRos
@@ -84,7 +84,8 @@ def exec_rollouts(
     trajectory  =   Trajectory(max_path_length).gen_points(**trajectory_info)
     env         =   QuadrotorEnvRos(trajectory[0], np.ones(4), **environment_config)
 
-    controller = SwitchController(env, MODE_CONTROLLER.FAULT_FREE)
+    ftc_controller_type = FTC_CONTROLLER_TYPE[controllers_info["fault_case"].upper()]
+    controller = SwitchController(env, MODE_CONTROLLER.FAULT_FREE, ftc_controller_type)
     experiment_config['indi_params'] = controller.ftc_controller.parameters.params
     with open(os.path.join(save_paths, 'experiment_config.json'), 'w') as fp:
         json.dump(experiment_config, fp, indent=2)
@@ -104,9 +105,9 @@ def exec_rollouts(
         timestep    =   0
         cum_reward  =   0
         while not done and timestep < max_path_length:
-            if (push_failure_at == timestep): env.set_task(np.array([1.0, 1.0, 0.0, 1.0])); print('setting env')
+            if (push_failure_at == timestep): env.set_task(np.array([1.0, 1.0, 1.0, 0.0])); print('setting env')
             if (push_failure_at + delay_timesteps) == timestep:
-                controller.switch_faulted(targetposition, damaged_rotor_index=2, c_time=0)
+                controller.switch_faulted(targetposition, damaged_rotor_index=3, c_time=0)
             
             next_target_pos =   trajectory[timestep + 1]
             control_signal = controller.get_action(obs, next_target_pos)
@@ -122,6 +123,20 @@ def exec_rollouts(
             running_paths['target'].append(targetposition)
 
             if done or len(running_paths['rewards']) >= max_path_length:
+                data = dict(
+                    observation=np.asarray(running_paths['observations']),
+                    actions=np.asarray(running_paths['actions']),
+                    rewards=np.asarray(running_paths['rewards']),
+                    dones=np.asarray(running_paths['dones']),
+                    next_obs=np.asarray(running_paths['next_obs']),
+                    target=np.asarray(running_paths['target'])
+                )
+                if hasattr(controller.ftc_controller, "ndes_list") and len(controller.ftc_controller.ndes_list) > 0:
+                    data["ndes"] = np.vstack(controller.ftc_controller.ndes_list)
+                if hasattr(controller.ftc_controller, "yaw_speed_cmd") and len(controller.ftc_controller.yaw_speed_cmd) > 0:
+                    data["yaw_speed_cmd"] = np.vstack(controller.ftc_controller.yaw_speed_cmd),
+                paths.append(data)
+                """
                 paths.append(dict(
                     observation=np.asarray(running_paths['observations']),
                     actions=np.asarray(running_paths['actions']),
@@ -132,6 +147,7 @@ def exec_rollouts(
                     ndes=np.vstack(controller.ftc_controller.ndes_list),
                     yaw_speed_cmd=np.vstack(controller.ftc_controller.yaw_speed_cmd),
                 ))
+                """
             # endif
             
             targetposition  =   next_target_pos

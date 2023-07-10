@@ -160,6 +160,9 @@ class INDIController(BaseController):
         self._state = states
         self._inputs = inputs
 
+        self.ndes_list = []
+        self.yaw_speed_cmd = []
+
 
 
     def init_filters(self, t):

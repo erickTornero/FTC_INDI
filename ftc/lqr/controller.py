@@ -61,7 +61,6 @@ class LQRController(BaseController):
             self._state.update(obs_dict)
         else:
             self._state.update(self.state_space.get_obs_dict(obs))
-
         self._inputs.update_position_target(targetpos)
         control_signal = self.__call__(self._state, self._inputs)
         return control_signal
@@ -92,7 +91,7 @@ class LQRController(BaseController):
         vzf_target = self.z_target_derivator(zf_target) # not working well #Check initial, recently changed
         return self.flot_calculator(state, z_target, vzf_target)
 
-    def init_controller(self, state0: State, inputs: Inputs, ct: float, damaged_motor=2):
+    def init_controller_deprecated(self, state0: State, inputs: Inputs, ct: float, damaged_motor=2):
         #inputs = inputs.
         position_target = np.array([inputs.x_target, inputs.y_target, inputs.z_target])
         #position_target = pos_invert_yz(position_target)
@@ -121,4 +120,41 @@ class LQRController(BaseController):
 
         self.ndes_list = []
         self.yaw_speed_cmd = []
+
+    def init_controller(
+        self,
+        obs_dict_initial: Dict[str, np.ndarray],
+        position_target: np.ndarray,
+        damaged_motor: int,
+        t: float
+    ):
+        #inputs = inputs.
+        #position_target = np.array([inputs.x_target, inputs.y_target, inputs.z_target])
+        #position_target = pos_invert_yz(position_target)
+        # initialize state and inputs
+        _state = State(invert_axis=False)  # Duplicated state, tends to error
+        _state.update_fail_id(damaged_motor)
+        _input = Inputs()
+        _input.update_position_target(position_target)
+        _input.update_yaw_target(0)
+        _state.update(obs_dict_initial)
+        inputs = _input
+        states = _state
+
+        z_target = position_target[-1]
+        self.z_target_filter.start(z_target, t)
+        #self.low_pass_ndes.start(np.array([0, 0, -1]).reshape(-1,1), t)
+
+        # derivators
         
+        #self.z_target_derivator.start(state0.position[2]) # should be input
+        self.z_target_derivator.start(z_target) # should be input
+
+        #ssres = self.subsystem(states, n_des)
+        
+        #h0, posdd, U0, U1 = ssres['h0'], ssres['posdd'], ssres['U0'], ssres['U1']
+        self._state = states
+        self._inputs = inputs
+
+        self.ndes_list = []
+        self.yaw_speed_cmd = []

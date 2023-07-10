@@ -33,7 +33,7 @@ def rollouts(
     print(f"damaged motor: {damaged_motor}")
     if allow_inject:
         damaged_motor = inject_failure['damaged_motor_index']
-        ffree_controller    =   HoverController()
+        ffree_controller    =   HoverController(env.state_space)
         if inject_failure['type']=='ornstein':
             orstein         =  1#OrnsteinUhlenbeck(**inject_failure['ornstein_uhlenbeck'])
             noise           =  orstein.get_ornstein_noise_length(max_path_length)
