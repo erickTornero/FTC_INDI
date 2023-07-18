@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("--not-early-stop", "-nes", dest="not_early_stop", action="store_true", default=False)
     parser.add_argument("--inject-failure", "-if", dest="inject_failure", action="store_true", default=False)
     parser.add_argument("--ftc-algorithm", "-ftca", dest="ftc_algorithm", type=str, default="indi")
+    parser.add_argument("--only-fault-free", "-off", dest="only_fault_free", action="store_true", default=False)
     args = parser.parse_args()
 
     roll_id = args.roll_id
@@ -24,6 +25,7 @@ if __name__ == "__main__":
     not_early_stop = args.not_early_stop
     allow_inject_failure = args.inject_failure
     ftc_algorithm: str = args.ftc_algorithm
+    only_fault_free: str = args.only_fault_free
     assert ftc_algorithm.lower() in ["indi", "lqr"], f"unsupported ftc algorithm -> {ftc_algorithm}"
 
     save_paths = './data/rolls62'
@@ -44,7 +46,7 @@ if __name__ == "__main__":
 
     experiment_config = {
         "type": "online_failure",
-        "max_path_length": 5000,
+        "max_path_length": 24000,
         "nrollouts": 20,
         "early_stop": not not_early_stop,
         "environment": {
@@ -53,6 +55,7 @@ if __name__ == "__main__":
                 'max_ang_speed': 30,
                 'max_radius_init': 2.0,
                 'angle_rad_std': 0.0,
+                'angle_mean': [1.57, 0.0, 0.0],
                 'angular_speed_mean': 0.0,
                 'angular_speed_std': 0.0,
             },
@@ -75,7 +78,7 @@ if __name__ == "__main__":
             "allow": allow_inject_failure,
             "type": "push",  # "push" or "ornstein"
             "damaged_motor_index": 2, #allowed [0, 1, 2, 3]
-            "push_failure_at": 2500,
+            "push_failure_at": 12000,
             "push_new_task": 0.0,
             "delay_controller": 20,
             "ornstein_uhlenbeck": {

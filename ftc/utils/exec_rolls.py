@@ -85,11 +85,12 @@ def exec_rollouts(
     env         =   QuadrotorEnvRos(trajectory[0], np.ones(4), **environment_config)
 
     ftc_controller_type = FTC_CONTROLLER_TYPE[controllers_info["fault_case"].upper()]
+    print(f"Controllers config -> \n:{controllers_info}")
     controller = SwitchController(env, MODE_CONTROLLER.FAULT_FREE, ftc_controller_type)
     experiment_config['indi_params'] = controller.ftc_controller.parameters.params
     with open(os.path.join(save_paths, 'experiment_config.json'), 'w') as fp:
         json.dump(experiment_config, fp, indent=2)
-
+    logger.log(f"rate -> {env.rate.sleep_dur.to_sec()} s")
     paths           =   []
     cum_rewards     =   []
     total_timesteps =   []

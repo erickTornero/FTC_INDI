@@ -11,7 +11,7 @@ from geometry_msgs.msg import Vector3
 from geometry_msgs.msg import Quaternion
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import Imu
-
+from typing import List, Union
 from .utils import euler_from_quaternion, quaternion_matrix, RobotDescription, quaternion_from_euler
 from .state_space import StateSpaceRobots
 import rospy
@@ -71,6 +71,7 @@ class WrapperROSQuad(BaseWrapperROS):
         self.max_ang_speed      =   kwargs_init['max_ang_speed']
         self.max_radius_init    =   kwargs_init['max_radius_init']
         self.angle_std          =   kwargs_init['angle_rad_std']
+        self.angle_mean         =   kwargs_init.get("angle_mean", 0.0)
         self.angular_speed_mean =   kwargs_init['angular_speed_mean']
         self.angular_speed_std  =   kwargs_init['angular_speed_std']
         self.counter = 0
@@ -113,7 +114,12 @@ class WrapperROSQuad(BaseWrapperROS):
     def _set_states(self, position=None, attitude=None, targetpos=None, name=None):
         if targetpos is None: targetpos = self.target_pos
         if position is None or attitude is None:
-            init_pos, init_att  =   self._get_random_pose(max_radius_init=self.max_radius_init, max_angle=self.angle_std, respecto=targetpos)
+            init_pos, init_att  =   self._get_random_pose(
+                max_radius_init=self.max_radius_init,
+                max_angle=self.angle_std,
+                respecto=targetpos,
+                angle_mean=self.angle_mean
+            )
             init_ang_speed      =   self._get_gauss_angular_speed(self.angular_speed_mean, self.angular_speed_std)
             #print('Sampled_pos      : \t{}'.format(init_pos))
             #print('Sampled attitude : \t{}'.format(init_att))
@@ -273,14 +279,17 @@ class WrapperROSQuad(BaseWrapperROS):
 
     def _check_actuators_ready(self):
         return self._check_topic_ready(self._actuator_reader, Actuators)
-        
 
 
-    def _get_gauss_euler(self, angle_std): 
-        x   =   [gauss(0, angle_std) for _ in range(3)]
+    def _get_gauss_euler(self, angle_std, angle_mean: Union[List[float], float]=None) -> np.ndarray: 
+        if angle_mean is None:
+            angle_mean = [0 for _ in range(3)]
+        if isinstance(angle_mean, float) or isinstance(angle_mean, int):
+            angle_mean = [angle_mean for _ in range(3)]
+        assert len(angle_mean) == 3, "The list angle must be of 3 len"
+        x   =   [gauss(angle, angle_std) for angle in angle_mean]
         x   =   np.clip(x, -np.pi/2.0+0.001, np.pi/2.0-0.001)
         return  np.asarray(x, dtype=np.float32)
-
 
     def _get_gauss_angular_speed(self, angular_mean, angular_std):
         v   =   [gauss(angular_mean, angular_std) for _ in range(3)]
@@ -302,7 +311,7 @@ class WrapperROSQuad(BaseWrapperROS):
         z           =   rho * np.cos(theta)
         return np.array([x, y, z], dtype=np.float32)
 
-    def _get_random_pose(self, max_radius_init=3.2, max_angle=np.pi, respecto:np.ndarray=None):
+    def _get_random_pose(self, max_radius_init=3.2, max_angle=np.pi, respecto:np.ndarray=None, angle_mean: Optional[Union[List[float], float]]=None):
         """ 
             _get_random_pose: Gets the initial pose: position & attitude
             position: Sample random position using spherical-to-cartesian transformation
@@ -318,6 +327,6 @@ class WrapperROSQuad(BaseWrapperROS):
             respecto    =   np.zeros(3, dtype=np.float32)
 
         position_sampled    =   self._sample_spherical2cartesian(max_radius_init) + respecto
-        attitude_sampled    =   quaternion_from_euler(*self._get_gauss_euler(max_angle))
+        attitude_sampled    =   quaternion_from_euler(*self._get_gauss_euler(max_angle, angle_mean))
 
         return position_sampled, attitude_sampled
