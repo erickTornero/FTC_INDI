@@ -291,8 +291,11 @@ class WrapperROSQuad(BaseWrapperROS):
         x   =   np.clip(x, -np.pi/2.0+0.001, np.pi/2.0-0.001)
         return  np.asarray(x, dtype=np.float32)
 
-    def _get_gauss_angular_speed(self, angular_mean, angular_std):
-        v   =   [gauss(angular_mean, angular_std) for _ in range(3)]
+    def _get_gauss_angular_speed(self, angular_mean: Union[List[float], float], angular_std: float):
+        if isinstance(angular_mean, float) or isinstance(angular_mean, int):
+            angular_mean = [angular_mean for _ in range(3)]
+        assert len(angular_mean) == 3, "angular speed mean input must be of len 3"
+        v   =   [gauss(angular_v, angular_std) for angular_v in angular_mean]
         return np.asarray(v, dtype=np.float32)
 
 
