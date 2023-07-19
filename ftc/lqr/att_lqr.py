@@ -19,7 +19,7 @@ class ReducedAttitudeController:
             izzt=parameters.izzt,
             ixxt=parameters.ixxt,
             izzp=parameters.izzp,
-            ixxb=parameters.ixxb
+            ixxb=parameters.ixxb,
         )
         Ae, Be, solution = solver.get_extended_control_matrixes(
             parameters.fail_id + 1,

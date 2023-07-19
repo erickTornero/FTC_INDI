@@ -53,6 +53,7 @@ class SolutionQuadrotorWrapper:
         ixxt: float,
         izzp: float,
         ixxb: float,
+        verbose=False,
     ) -> None:
         self.mass = mass
         self.gravity = gravity
@@ -64,16 +65,19 @@ class SolutionQuadrotorWrapper:
         self.ixxt = ixxt
         self.izzp = izzp
         self.ixxb = ixxb
+        self.verbose = verbose
 
     def __call__(self, failed_rotor: int, alpha_ratio: float) -> Tuple[List[float], List[float]]:
-        print(f"** Solving with failed-rotor = {failed_rotor}, alpha-ratio = p = {alpha_ratio}**")
+        if self.verbose:
+            print(f"** Solving with failed-rotor = {failed_rotor}, alpha-ratio = p = {alpha_ratio}**")
         root, cl = self.solve_generic(failed_rotor, alpha_ratio)
-        print('=====Non-linear system Error at Equilibrium Point==========')
-        print("nx={:.4f}\nny={}\nnz={}\nf1={}\nf2={}\nf3={}\nf4={}\nsF={}\nE={}\np={}\nq={}\nr={}\nw1={}\nw2={}\nw3={}\nw4={}".format(*cl))
-        print(f"=>Sum errors: {sum(np.abs(cl))}")
-        print('===================================================\n')
-        print("solution")
-        print("nx={:.4f}\nny={}\nnz={}\nf1={}\nf2={}\nf3={}\nf4={}\nsF={}\nE={}\np={}\nq={}\nr={}\nw1={}\nw2={}\nw3={}\nw4={}".format(*root))
+        if self.verbose:
+            print('=====Non-linear system Error at Equilibrium Point==========')
+            print("nx={:.4f}\nny={}\nnz={}\nf1={}\nf2={}\nf3={}\nf4={}\nsF={}\nE={}\np={}\nq={}\nr={}\nw1={}\nw2={}\nw3={}\nw4={}".format(*cl))
+            print(f"=>Sum errors: {sum(np.abs(cl))}")
+            print('===================================================\n')
+            print("solution")
+            print("nx={:.4f}\nny={}\nnz={}\nf1={}\nf2={}\nf3={}\nf4={}\nsF={}\nE={}\np={}\nq={}\nr={}\nw1={}\nw2={}\nw3={}\nw4={}".format(*root))
         return root, cl
 
 

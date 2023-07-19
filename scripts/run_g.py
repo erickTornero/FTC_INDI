@@ -6,6 +6,7 @@ import os
 import re
 import json
 import glob
+import math
 from ftc.utils.logger import Logger
 from ftc.utils.exec_rolls import exec_rollouts
 
@@ -18,6 +19,14 @@ if __name__ == "__main__":
     parser.add_argument("--inject-failure", "-if", dest="inject_failure", action="store_true", default=False)
     parser.add_argument("--ftc-algorithm", "-ftca", dest="ftc_algorithm", type=str, default="indi")
     parser.add_argument("--only-fault-free", "-off", dest="only_fault_free", action="store_true", default=False)
+
+    # euler initial distribution
+    parser.add_argument("--euler-initial-std", "--euler-std", dest="euler_initial_std", type=float, default=34.37) # in degrees
+    parser.add_argument("--euler-initial-mean", "--euler-mean", dest="euler_initial_mean", type=float, nargs="*", required=False) # in degrees
+    parser.add_argument("--euler-initial-mean-x", "--euler-mean-x", dest="euler_initial_mean_x", type=float, default=0.0) # in degrees
+    parser.add_argument("--euler-initial-mean-y", "--euler-mean-y", dest="euler_initial_mean_y", type=float, default=0.0) # in degrees
+    parser.add_argument("--euler-initial-mean-z", "--euler-mean-z", dest="euler_initial_mean_z", type=float, default=0.0) # in degrees
+
     args = parser.parse_args()
 
     roll_id = args.roll_id
@@ -27,6 +36,25 @@ if __name__ == "__main__":
     ftc_algorithm: str = args.ftc_algorithm
     only_fault_free: str = args.only_fault_free
     assert ftc_algorithm.lower() in ["indi", "lqr"], f"unsupported ftc algorithm -> {ftc_algorithm}"
+
+    # euler angle parse
+    euler_initial_std = args.euler_initial_std
+    euler_initial_mean = args.euler_initial_mean
+    euler_initial_mean_x = args.euler_initial_mean_x
+    euler_initial_mean_y = args.euler_initial_mean_y
+    euler_initial_mean_z = args.euler_initial_mean_z
+
+    if euler_initial_mean:
+        assert len(euler_initial_mean) == 3, f"Euler initial mean must be len 3, got -> {euler_initial_mean}"
+    else:
+        euler_initial_mean = [
+            euler_initial_mean_x,
+            euler_initial_mean_y,
+            euler_initial_mean_z,
+        ]
+    # convert from degs to rad
+    euler_initial_mean = [math.pi * v/180 for v in euler_initial_mean]
+    euler_initial_std = math.pi * euler_initial_std/180.0
 
     save_paths = './data/rolls62'
 
@@ -46,16 +74,16 @@ if __name__ == "__main__":
 
     experiment_config = {
         "type": "online_failure",
-        "max_path_length": 24000,
+        "max_path_length": 5000,
         "nrollouts": 20,
         "early_stop": not not_early_stop,
         "environment": {
             'args_init_distribution': {
-                'max_radius': 6.0,#4.2,
+                'max_radius': 5.99,#4.2,
                 'max_ang_speed': 30,
                 'max_radius_init': 2.0,
                 'angle_rad_std': 0.0,
-                'angle_mean': [1.57, 0.0, 0.0],
+                'angle_mean': [0.1745, 0.0, 0.0],
                 'angular_speed_mean': 0.0,
                 'angular_speed_std': 0.0,
             },
@@ -123,6 +151,12 @@ if __name__ == "__main__":
     print("early_stop\t->\t", not not_early_stop)
     print("allow_inject_failure\t->\t", allow_inject_failure)
     print("ftc_algorithm\t->\t", ftc_algorithm)
+    print("-\tinitial distribution\t-")
+    print(f"euler_initial_std -> {euler_initial_std}")
+    print(f"euler_initial_mean -> {euler_initial_mean}")
+    print(f"euler_initial_mean_x -> {euler_initial_mean_x}")
+    print(f"euler_initial_mean_y -> {euler_initial_mean_y}")
+    print(f"euler_initial_mean_z -> {euler_initial_mean_z}")
     print("="*50)
 
     exec_rollouts(
