@@ -5,6 +5,7 @@ An script to test push failure while flying
 import os
 import re
 import json
+import sys
 import glob
 import math
 from ftc.utils.logger import Logger
@@ -20,12 +21,22 @@ if __name__ == "__main__":
     parser.add_argument("--ftc-algorithm", "-ftca", dest="ftc_algorithm", type=str, default="indi")
     parser.add_argument("--only-fault-free", "-off", dest="only_fault_free", action="store_true", default=False)
 
+    parser.add_argument("--max-initial-radius", dest="max_initial_radius", type=float, default=2.0, help="max radius around the target point to initialize")
+    parser.add_argument("--max-duration", "-md", dest="max_duration", type=float, default=12, help="max duration in seconds")
+    parser.add_argument("--rate-environment", dest="rate_environment", type=int, default=1000)
     # euler initial distribution
     parser.add_argument("--euler-initial-std", "--euler-std", dest="euler_initial_std", type=float, default=34.37) # in degrees
     parser.add_argument("--euler-initial-mean", "--euler-mean", dest="euler_initial_mean", type=float, nargs="*", required=False) # in degrees
     parser.add_argument("--euler-initial-mean-x", "--euler-mean-x", dest="euler_initial_mean_x", type=float, default=0.0) # in degrees
     parser.add_argument("--euler-initial-mean-y", "--euler-mean-y", dest="euler_initial_mean_y", type=float, default=0.0) # in degrees
     parser.add_argument("--euler-initial-mean-z", "--euler-mean-z", dest="euler_initial_mean_z", type=float, default=0.0) # in degrees
+
+    # body speeds
+    parser.add_argument("--angular-speed-std", dest="angular_speed_std", type=float, default=0.0) # in degrees
+    parser.add_argument("--angular-speed-mean", dest="angular_speed_mean", type=float, nargs="*", required=False) # in degrees
+    parser.add_argument("--angular-speed-mean-x", dest="angular_speed_mean_x", type=float, default=0.0) # in degrees
+    parser.add_argument("--angular-speed-mean-y", dest="angular_speed_mean_y", type=float, default=0.0) # in degrees
+    parser.add_argument("--angular-speed-mean-z", dest="angular_speed_mean_z", type=float, default=0.0) # in degrees
 
     args = parser.parse_args()
 
@@ -36,6 +47,8 @@ if __name__ == "__main__":
     ftc_algorithm: str = args.ftc_algorithm
     only_fault_free: str = args.only_fault_free
     assert ftc_algorithm.lower() in ["indi", "lqr"], f"unsupported ftc algorithm -> {ftc_algorithm}"
+
+    max_initial_radius = args.max_initial_radius
 
     # euler angle parse
     euler_initial_std = args.euler_initial_std
@@ -56,6 +69,26 @@ if __name__ == "__main__":
     euler_initial_mean = [math.pi * v/180 for v in euler_initial_mean]
     euler_initial_std = math.pi * euler_initial_std/180.0
 
+    # body angular speeds
+    angular_speed_std = args.angular_speed_std
+    angular_speed_mean = args.angular_speed_mean
+    angular_speed_mean_x = args.angular_speed_mean_x
+    angular_speed_mean_y = args.angular_speed_mean_y
+    angular_speed_mean_z = args.angular_speed_mean_z
+
+    if angular_speed_mean:
+        assert len(angular_speed_mean) == 3, f"Euler initial mean must be len 3, got -> {angular_speed_mean}"
+    else:
+        angular_speed_mean = [
+            angular_speed_mean_x,
+            angular_speed_mean_y,
+            angular_speed_mean_z,
+        ]
+
+    max_duration = args.max_duration
+    rate_environment = args.rate_environment
+    max_path_length = int(max_duration * rate_environment)
+
     save_paths = './data/rolls62'
 
     if roll_id is None:
@@ -74,20 +107,20 @@ if __name__ == "__main__":
 
     experiment_config = {
         "type": "online_failure",
-        "max_path_length": 5000,
+        "max_path_length": max_path_length,
         "nrollouts": 20,
         "early_stop": not not_early_stop,
         "environment": {
             'args_init_distribution': {
                 'max_radius': 5.99,#4.2,
                 'max_ang_speed': 30,
-                'max_radius_init': 2.0,
-                'angle_rad_std': 0.0,
-                'angle_mean': [0.1745, 0.0, 0.0],
-                'angular_speed_mean': 0.0,
-                'angular_speed_std': 0.0,
+                'max_radius_init': max_initial_radius,
+                'angle_rad_std': euler_initial_std,
+                'angle_mean': euler_initial_mean,
+                'angular_speed_mean': angular_speed_mean,
+                'angular_speed_std': angular_speed_std,
             },
-            "rate": 1000,
+            "rate": rate_environment,
             'state_space_names': [
                 'rotation_matrix', 'position', 'euler', 'linear_vel', 'angular_vel'
             ],
@@ -131,7 +164,7 @@ if __name__ == "__main__":
         #assert len(configsfiles) ==0, 'The folder is busy, select other'
         #assert len(files_paths)==0, 'The folder is busy {}, select another one'.format(save_paths)
         if len(files_paths) > 0:
-            user_input = input(f"fold <rolls{roll_id}> busy, want to use roll-id -> <rolls{roll_id + 1}>? yes/no >\t")
+            user_input = input(f"fold <rolls{roll_id}> busy, want to use roll-id -> <rolls{roll_id + 1}>? yes/no > ")
             if user_input.lower() == "yes":
                 roll_id += 1
                 save_paths = f"./data/rolls{roll_id}"
@@ -141,9 +174,13 @@ if __name__ == "__main__":
 
         if not os.path.exists(save_paths):
             os.makedirs(save_paths)
+
+        with open(os.path.join(save_paths, "command.txt"), "w") as fp:
+            fp.write(" ".join(["python"] + sys.argv))
         
         #with open(os.path.join(save_paths, 'experiment_config.json'), 'w') as fp:
         #    json.dump(experiment_config, fp, indent=2)
+    ds = u'\N{DEGREE SIGN}'
     print("="* 20 + "ARGS" + "="*20)
     print("save_folder\t->\t", save_paths)
     print("trajectory_type ->\t", trajectory_type)
@@ -152,11 +189,17 @@ if __name__ == "__main__":
     print("allow_inject_failure\t->\t", allow_inject_failure)
     print("ftc_algorithm\t->\t", ftc_algorithm)
     print("-\tinitial distribution\t-")
-    print(f"euler_initial_std -> {euler_initial_std}")
-    print(f"euler_initial_mean -> {euler_initial_mean}")
-    print(f"euler_initial_mean_x -> {euler_initial_mean_x}")
-    print(f"euler_initial_mean_y -> {euler_initial_mean_y}")
-    print(f"euler_initial_mean_z -> {euler_initial_mean_z}")
+    print(f"max_initial_radius -> {max_initial_radius} (m)")
+    print(f"euler_initial_std -> {euler_initial_std}{ds}")
+    print(f"euler_initial_mean -> {euler_initial_mean}{ds}")
+    print(f"euler_initial_mean_x -> {euler_initial_mean_x}{ds}")
+    print(f"euler_initial_mean_y -> {euler_initial_mean_y}{ds}")
+    print(f"euler_initial_mean_z -> {euler_initial_mean_z}{ds}")
+    print(f"angular_speed_mean -> {angular_speed_mean} rad/s")
+    print(f"angular_speed_std -> {angular_speed_std} rad/s")
+    print(f"max_duration -> {max_duration} (s)")
+    print(f"rate_environment -> {rate_environment} Hz")
+    print(f"max_path_length -> {max_path_length} steps")
     print("="*50)
 
     exec_rollouts(
