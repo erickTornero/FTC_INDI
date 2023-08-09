@@ -24,7 +24,7 @@ def URPositionControl(inputs: Inputs, state: State, par: Parameters, errorInt: n
     errorInt = np.clip(errorInt,-intLim, intLim)
 
     # reference acceleration
-    a_ref = par.position_Kp_vel * errorVel + par.position_Ki_vel * errorInt
+    a_ref = 2.0 * velTarget  + par.position_Kp_vel * errorVel + par.position_Ki_vel * errorInt
     a_ref[2] = a_ref[2] - par.g
 
     maxLateral = np.abs(par.g * np.tan(maxAngle))

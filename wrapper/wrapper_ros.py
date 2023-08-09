@@ -152,7 +152,8 @@ class WrapperROSQuad(BaseWrapperROS):
         distance    =   (targetpos - position) if targetpos is not None else (self.target_pos - position)
         distance    =   np.sqrt((distance * distance).sum())
 
-        return 4.0 - 1.25 * distance
+        #return 4.0 - 1.25 * distance
+        return 1.0 - distance/5.9
 
     def _before_reset(self):
         """
