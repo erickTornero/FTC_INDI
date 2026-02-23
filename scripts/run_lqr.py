@@ -20,6 +20,7 @@ if __name__ == '__main__':
             'max_radius': 4.2,
             'max_ang_speed': 30,
             'max_radius_init': 0.0,
+            'angle_rad_mean': 0.0,
             'angle_rad_std': 0.0,
             'angular_speed_mean': 0.0,
             'angular_speed_std': 0.0,
