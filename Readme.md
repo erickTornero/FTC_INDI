@@ -33,3 +33,19 @@ S. Sun, X. Wang, Q. Chu and C. d. Visser.
     python scripts/run_INDIcontroller.py
 ```
 
+
+## Run using docker
+
+Build docker images
+
+```
+docker build . -f docker/Dockerfile.rotors -t rotors-sim-ftc:dev
+```
+
+```
+docker build . -f docker/Dockerfile.ftc -t ftc-d:dev
+```
+
+```
+docker compose -f docker/docker-compose.yaml up
+```

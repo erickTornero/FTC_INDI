@@ -2,7 +2,7 @@ import os
 import json
 import joblib
 import numpy as np
-from wrapper import StateSpaceRobots
+from ftc.wrapper import StateSpaceRobots
 from data_analisys import BaseExtractor
 
 class PathsExtractor(BaseExtractor):

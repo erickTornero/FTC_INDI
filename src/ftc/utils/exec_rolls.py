@@ -4,7 +4,7 @@ from time import time
 from ftc.switch_controllers.switch_controller import SwitchController, MODE_CONTROLLER
 from ftc.utils.gen_trajectories import Trajectory
 from ftc.utils.logger import Logger
-from wrapper.wrapper_crippled import QuadrotorEnvRos
+from ftc.wrapper.wrapper_crippled import QuadrotorEnvRos
 
 
 # Define rolls function to inject failures at specific timestep

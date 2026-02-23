@@ -10,7 +10,7 @@ from ftc.utils.logger import Logger
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
 from ftc.utils.transforms import pos_invert_yz
-from wrapper.wrapper_crippled import QuadrotorEnvRos
+from ftc.wrapper.wrapper_crippled import QuadrotorEnvRos
 from ftc.ffree import HoverController
 def rollouts(
     env: QuadrotorEnvRos,
