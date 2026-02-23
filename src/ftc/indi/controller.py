@@ -8,7 +8,7 @@ from ftc.utils.filters import LowpassFilter
 from ftc.indi.parameters import Parameters
 from math import sin, cos
 
-from wrapper.state_space import StateSpaceRobots
+from ftc.wrapper.state_space import StateSpaceRobots
 from ..base_controller import BaseController
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs

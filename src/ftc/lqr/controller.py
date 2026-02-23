@@ -5,7 +5,7 @@ from ftc.indi.controller import DiscreteTimeDerivative
 from ftc.utils.filters import LowpassFilter
 from ftc.base_controller import BaseController
 from ftc.lqr.parameters import Parameters
-from wrapper.state_space import StateSpaceRobots
+from ftc.wrapper.state_space import StateSpaceRobots
 from ftc.lqr.calculate_lqr import Mixer, FlotCalculator
 from ftc.utils.state import State
 from ftc.utils.inputs import Inputs

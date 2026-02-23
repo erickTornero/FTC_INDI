@@ -1,0 +1,41 @@
+networks:
+  ros:
+    driver: bridge
+
+services:
+
+  simulation:
+    image: rotors-sim-ftc:dev
+
+    volumes: 
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    environment:
+      - DISPLAY=$DISPLAY
+#      - ROS_MASTER_URI=http://ros-master:11311
+      - QT_X11_NO_MITSHM=1
+    privileged: true
+    command: "roslaunch launchquad.launch"
+    networks: 
+      - ros
+
+  ftc:
+    image: ftc-d:latest
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0']
+            capabilities: [gpu]
+    depends_on:
+      - simulation
+    environment:
+      - ROS_MASTER_URI=http://simulation:11311
+      - DISPLAY=$DISPLAY
+      - QT_X11_NO_MITSHM=1
+    privileged: true
+    networks:
+      - ros
+    volumes:
+      - ..:/code
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw

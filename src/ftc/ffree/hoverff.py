@@ -1,6 +1,6 @@
 import numpy as np
 
-from wrapper.state_space import StateSpaceRobots
+from ftc.wrapper.state_space import StateSpaceRobots
 from .pid import PID
 from .common import initialize_params
 from ..base_controller import BaseController

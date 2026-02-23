@@ -1,5 +1,5 @@
 import numpy as np
-from wrapper import QuadrotorEnvRos
+from ftc.wrapper import QuadrotorEnvRos
 from ftc.ffree import HoverController#, HoverLQRff
 #def rollouts(env, controller, frequency, nrolls, max_path_length, save_paths, trajectory, initial_states, run_all_steps=False, logger=None, inject_failure=None):
 

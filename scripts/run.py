@@ -5,7 +5,7 @@ import numpy as np
 from ftc.utils.gen_trajectories import Trajectory
 from ftc.indi.parameters import Parameters
 from ftc.indi.controller import INDIController
-from wrapper import QuadrotorEnvRos, state_space
+from ftc.wrapper import QuadrotorEnvRos, state_space
 from ftc.utils.rolls import rollouts
 from ftc.utils.logger import Logger
 

@@ -1,0 +1,65 @@
+#FROM osrf/ros:noetic-desktop-focal
+#FROM ros:noetic
+FROM rotors-sim-ftc:dev
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
+
+# UV settings - install to system Python (not venv)
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+ENV UV_SYSTEM_PYTHON=true
+ENV UV_PYTHON=/usr/bin/python3.9
+ENV UV_PROJECT_ENVIRONMENT=/usr
+
+# Python Path Setup
+ENV PYTHONPATH=/usr/local/lib/python3.9/dist-packages
+SHELL ["/bin/bash", "-c"]
+
+WORKDIR /code
+
+
+# Install packages, python+pip, and make that the default python version
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends software-properties-common \
+    && add-apt-repository -y ppa:deadsnakes/ppa  \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends python3.9 python3.9-dev python3-pip jq gcc g++ build-essential libffi-dev libpq-dev curl ffmpeg wget bash git libx11-dev python3-tk \
+    && update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1 \
+    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1 \
+    && apt-get clean
+
+# Install uv
+RUN pip install -U --no-cache-dir setuptools==80.10.2 && \
+    pip install --no-cache-dir uv==0.9.27
+
+
+# Install the project's dependencies using the lockfile and settings
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    ulimit -n 4096 && uv sync --frozen --no-install-project
+
+# libx11-dev & python3-tk for allow show display w/ matplotlib from container
+# RUN apt install -y python3.9 python3-pip python3.9-venv libx11-dev python3-tk
+#RUN apt install -y python3.9 python3-pip python3.9-venv libx11-dev python3-tk
+
+#RUN ln -s /usr/bin/python3.9 /usr/bin/python3
+
+#SHELL ["/bin/bash", "-c", "source /home/${username}/${condaenv}/bin/activate"]
+#RUN python3.9 -m pip install torch torchvision torchaudio
+
+#COPY requirements.txt requirements.txt
+#RUN python3.9 -m pip install -r requirements.txt
+
+COPY . .
+# Install the local package in editable mode for development
+# This allows changes in the source code to be reflected immediately without rebuilding the image
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install -e .[dev]
+
+RUN echo "source /catkin_ws/devel/setup.bash" >> /root/.bashrc
+COPY docker/entrypoint.sh /entrypoint.sh
+
+ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
+CMD ["python3.9", "-m", "http.server"]

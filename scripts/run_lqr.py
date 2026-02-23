@@ -5,7 +5,7 @@ import numpy as np
 from ftc.utils.gen_trajectories import Trajectory
 from ftc.lqr.parameters import Parameters
 from ftc.lqr.controller import LQRController
-from wrapper import QuadrotorEnvRos
+from ftc.wrapper import QuadrotorEnvRos
 from ftc.utils.rolls import rollouts
 from ftc.utils.logger import Logger
 
@@ -20,6 +20,7 @@ if __name__ == '__main__':
             'max_radius': 4.2,
             'max_ang_speed': 30,
             'max_radius_init': 0.0,
+            'angle_rad_mean': 0.0,
             'angle_rad_std': 0.0,
             'angular_speed_mean': 0.0,
             'angular_speed_std': 0.0,

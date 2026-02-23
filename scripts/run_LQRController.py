@@ -3,7 +3,7 @@ from ftc.utils.state import State
 from ftc.utils.inputs import Inputs
 from ftc.lqr.controller import LQRController
 from ftc.lqr.parameters import Parameters
-from wrapper import QuadrotorEnvRos, state_space
+from ftc.wrapper import QuadrotorEnvRos, state_space
 
 crippled_degree = np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
 state_space = ['rotation_matrix', 'euler', 'position', 'linear_vel', 'angular_vel']

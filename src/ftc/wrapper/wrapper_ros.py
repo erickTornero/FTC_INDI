@@ -70,7 +70,8 @@ class WrapperROSQuad(BaseWrapperROS):
         self.max_radius         =   kwargs_init['max_radius']
         self.max_ang_speed      =   kwargs_init['max_ang_speed']
         self.max_radius_init    =   kwargs_init['max_radius_init']
-        self.angle_std          =   kwargs_init['angle_rad_std']
+        self.angle_mean_init    =   kwargs_init.get('angle_rad_mean', 0.0)
+        self.angle_std_init     =   kwargs_init['angle_rad_std']
         self.angular_speed_mean =   kwargs_init['angular_speed_mean']
         self.angular_speed_std  =   kwargs_init['angular_speed_std']
         self.counter = 0
@@ -113,7 +114,12 @@ class WrapperROSQuad(BaseWrapperROS):
     def _set_states(self, position=None, attitude=None, targetpos=None, name=None):
         if targetpos is None: targetpos = self.target_pos
         if position is None or attitude is None:
-            init_pos, init_att  =   self._get_random_pose(max_radius_init=self.max_radius_init, max_angle=self.angle_std, respecto=targetpos)
+            init_pos, init_att  =   self._get_random_pose(
+                max_radius_init=self.max_radius_init,
+                mean_angle_init=self.angle_mean_init,
+                max_angle=self.angle_std_init,
+                respecto=targetpos
+            )
             init_ang_speed      =   self._get_gauss_angular_speed(self.angular_speed_mean, self.angular_speed_std)
             #print('Sampled_pos      : \t{}'.format(init_pos))
             #print('Sampled attitude : \t{}'.format(init_att))
@@ -276,8 +282,8 @@ class WrapperROSQuad(BaseWrapperROS):
         
 
 
-    def _get_gauss_euler(self, angle_std): 
-        x   =   [gauss(0, angle_std) for _ in range(3)]
+    def _get_gauss_euler(self, angle_mean: float, angle_std: float) -> np.ndarray:
+        x   =   [gauss(angle_mean, angle_std) for _ in range(3)]
         x   =   np.clip(x, -np.pi/2.0+0.001, np.pi/2.0-0.001)
         return  np.asarray(x, dtype=np.float32)
 
@@ -302,7 +308,7 @@ class WrapperROSQuad(BaseWrapperROS):
         z           =   rho * np.cos(theta)
         return np.array([x, y, z], dtype=np.float32)
 
-    def _get_random_pose(self, max_radius_init=3.2, max_angle=np.pi, respecto:np.ndarray=None):
+    def _get_random_pose(self, max_radius_init=3.2, mean_angle_init: float = 0.0, max_angle: float = np.pi, respecto: np.ndarray = None):
         """ 
             _get_random_pose: Gets the initial pose: position & attitude
             position: Sample random position using spherical-to-cartesian transformation
@@ -318,6 +324,6 @@ class WrapperROSQuad(BaseWrapperROS):
             respecto    =   np.zeros(3, dtype=np.float32)
 
         position_sampled    =   self._sample_spherical2cartesian(max_radius_init) + respecto
-        attitude_sampled    =   quaternion_from_euler(*self._get_gauss_euler(max_angle))
+        attitude_sampled    =   quaternion_from_euler(*self._get_gauss_euler(angle_mean=mean_angle_init, angle_std=max_angle))
 
         return position_sampled, attitude_sampled

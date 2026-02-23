@@ -1,6 +1,6 @@
 import os
 import json
-from wrapper import StateSpaceRobots
+from ftc.wrapper import StateSpaceRobots
 class BaseExtractor:
     """
         Stract specific data from the datase to further analisys
