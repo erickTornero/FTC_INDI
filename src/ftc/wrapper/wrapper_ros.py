@@ -3,6 +3,7 @@ from typing import Dict, Optional
 from collections import OrderedDict
 from .base_wrapper_ros import BaseWrapperROS
 from gym import spaces
+from typing import Union
 from mav_msgs.msg import Actuators
 from gazebo_msgs.srv import SetModelState
 from gazebo_msgs.msg import ModelState
@@ -70,13 +71,20 @@ class WrapperROSQuad(BaseWrapperROS):
         self.max_radius         =   kwargs_init['max_radius']
         self.max_ang_speed      =   kwargs_init['max_ang_speed']
         self.max_radius_init    =   kwargs_init['max_radius_init']
-        self.angle_mean_init    =   kwargs_init.get('angle_rad_mean', 0.0)
-        self.angle_std_init     =   kwargs_init['angle_rad_std']
-        self.angular_speed_mean =   kwargs_init['angular_speed_mean']
-        self.angular_speed_std  =   kwargs_init['angular_speed_std']
+        self.angle_mean_init    =   self._get_valid_3_axis(kwargs_init.get('angle_rad_mean', 0.0))
+        self.angle_std_init     =   self._get_valid_3_axis(kwargs_init['angle_rad_std'])
+        self.angular_speed_mean =   self._get_valid_3_axis(kwargs_init['angular_speed_mean'])
+        self.angular_speed_std  =   self._get_valid_3_axis(kwargs_init['angular_speed_std'])
         self.counter = 0
         self._imu = None
         #self._check_all_systems_ready()
+
+    def _get_valid_3_axis(self, x: Union[float, list, tuple], name: str = "") -> list[float]:
+        if isinstance(x, (list, tuple)):
+            if len(x) != 3:
+                raise ValueError('Invalid 3-axis {} input: {}'.format(name, x))
+            return list(x)
+        return [x] * 3
 
     def _set_action_msg(self, action, actuator_publisher=None):
         self.actuator_msg.angular_velocities    =   action
@@ -117,7 +125,7 @@ class WrapperROSQuad(BaseWrapperROS):
             init_pos, init_att  =   self._get_random_pose(
                 max_radius_init=self.max_radius_init,
                 mean_angle_init=self.angle_mean_init,
-                max_angle=self.angle_std_init,
+                std_angle_init=self.angle_std_init,
                 respecto=targetpos
             )
             init_ang_speed      =   self._get_gauss_angular_speed(self.angular_speed_mean, self.angular_speed_std)
@@ -282,14 +290,14 @@ class WrapperROSQuad(BaseWrapperROS):
         
 
 
-    def _get_gauss_euler(self, angle_mean: float, angle_std: float) -> np.ndarray:
-        x   =   [gauss(angle_mean, angle_std) for _ in range(3)]
-        x   =   np.clip(x, -np.pi/2.0+0.001, np.pi/2.0-0.001)
+    def _get_gauss_euler(self, angle_mean: list[float], angle_std: list[float]) -> np.ndarray:
+        x   =   [gauss(angle_mean[i], angle_std[i]) for i in range(3)]
+        # x   =   np.clip(x, -np.pi/2.0+0.001, np.pi/2.0-0.001)
         return  np.asarray(x, dtype=np.float32)
 
 
-    def _get_gauss_angular_speed(self, angular_mean, angular_std):
-        v   =   [gauss(angular_mean, angular_std) for _ in range(3)]
+    def _get_gauss_angular_speed(self, angular_mean: list[float], angular_std: list[float]) -> np.ndarray:
+        v   =   [gauss(angular_mean[i], angular_std[i]) for i in range(3)]
         return np.asarray(v, dtype=np.float32)
 
 
@@ -308,7 +316,13 @@ class WrapperROSQuad(BaseWrapperROS):
         z           =   rho * np.cos(theta)
         return np.array([x, y, z], dtype=np.float32)
 
-    def _get_random_pose(self, max_radius_init=3.2, mean_angle_init: float = 0.0, max_angle: float = np.pi, respecto: np.ndarray = None):
+    def _get_random_pose(
+        self,
+        max_radius_init=3.2,
+        mean_angle_init: Union[float, list[float]] = 0.0,
+        std_angle_init: Union[float, list[float]] = np.pi,
+        respecto: np.ndarray = None
+    ):
         """ 
             _get_random_pose: Gets the initial pose: position & attitude
             position: Sample random position using spherical-to-cartesian transformation
@@ -316,14 +330,16 @@ class WrapperROSQuad(BaseWrapperROS):
 
             @args:
             -max_radius_init:    Maximum radius taken with respect the the respecto variable (rho).
-            -max_angle :    Maximum angle at the initial position (avoid upside samples at the beginning)
+            -std_angle_init :    Maximum angle at the initial position (avoid upside samples at the beginning)
             -respecto  :    Position to sample around
         """
         
         if respecto is None:
             respecto    =   np.zeros(3, dtype=np.float32)
 
+        mean_angle_init = self._get_valid_3_axis(mean_angle_init, 'mean_angle_init')
+        std_angle_init = self._get_valid_3_axis(std_angle_init, 'std_angle_init')
         position_sampled    =   self._sample_spherical2cartesian(max_radius_init) + respecto
-        attitude_sampled    =   quaternion_from_euler(*self._get_gauss_euler(angle_mean=mean_angle_init, angle_std=max_angle))
+        attitude_sampled    =   quaternion_from_euler(*self._get_gauss_euler(angle_mean=mean_angle_init, angle_std=std_angle_init))
 
         return position_sampled, attitude_sampled

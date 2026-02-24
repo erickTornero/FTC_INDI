@@ -12,15 +12,15 @@ from ftc.utils.logger import Logger
 if __name__ == '__main__':
     crippled_degree = np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
     state_space = ['rotation_matrix', 'euler', 'position', 'linear_vel', 'angular_vel']
-    save_paths = './data/rolls76'
+    save_paths = './data/rolls34'
     config = {
-        "max_path_length": 10000,
+        "max_path_length": 2500,
         "nrollouts": 20,
         'args_init_distribution': {
             'max_radius': 4.2,
             'max_ang_speed': 30,
-            'max_radius_init': 0.0,
-            'angle_rad_mean': 0.0,
+            'max_radius_init': 2.0,
+            'angle_rad_mean': [0.0, 0.0, 0.0],
             'angle_rad_std': 0.0,
             'angular_speed_mean': 0.0,
             'angular_speed_std': 0.0,
@@ -93,5 +93,5 @@ if __name__ == '__main__':
         trajectory,
         logger=logger,
         inject_failure=inject_failure,
-        run_all_steps=True,
+        run_all_steps=False,
     )
